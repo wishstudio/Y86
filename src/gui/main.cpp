@@ -18,6 +18,7 @@
  */
 
 #include <QApplication>
+#include "MainWindow.h"
 
 #if defined _WIN32 || _WIN64
 #include <Windows.h>
@@ -31,4 +32,9 @@ int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 #endif
+
+    MainWindow window;
+    window.show();
+
+    return app.exec();
 }
