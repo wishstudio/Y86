@@ -20,4 +20,24 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+#include <QByteArray>
+
+class Memory
+{
+public:
+    Memory();
+    virtual ~Memory();
+
+    void initMemory(int size);
+    void initSegment(int origin, const QByteArray &content, int attr);
+    void initSegment(int origin, int size, int attr);
+    char readChar(int addr) const;
+    int readInt(int addr) const;
+    bool writeInt(int addr, int value);
+
+private:
+    char *mem;
+    int *attrMask;
+};
+
 #endif
