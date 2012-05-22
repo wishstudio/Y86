@@ -22,14 +22,22 @@
 Memory::Memory()
 {
     mem = 0;
+    attrMask = 0;
 }
 
 Memory::~Memory()
 {
+    delete mem;
+    delete attrMask;
 }
 
 void Memory::initMemory(int size)
 {
+    if (mem)
+    {
+        delete mem;
+        delete attrMask;
+    }
     mem = new char[size];
     int maskLen = (size + 31) / 32;
     attrMask = new int[maskLen];
