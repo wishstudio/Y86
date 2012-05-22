@@ -21,6 +21,7 @@
 #define VM_H
 
 #include "VMWorker.h"
+#include "Memory.h"
 #include "Wire.h"
 
 #define STAGE_P    0
@@ -39,6 +40,8 @@ public:
     void loadObject(const QString &fileName);
 
 private:
+    Memory *memory;
+    Wire *wire;
     VMWorker *stageWorkers[6];
 };
 

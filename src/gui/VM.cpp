@@ -28,10 +28,14 @@ static int readInt(const QByteArray &bytes, int addr)
 
 VM::VM()
 {
+    memory = new Memory();
+    wire = new Wire();
 }
 
 VM::~VM()
 {
+    delete memory;
+    delete wire;
 }
 
 void VM::loadObject(const QString &fileName)
@@ -40,6 +44,25 @@ void VM::loadObject(const QString &fileName)
     file.open(QIODevice::ReadOnly);
     QByteArray content = file.readAll();
     file.close();
-    if (QString(content.left(5)) != "YYOBJ")
+    if (QString(content.left(5)) != "YOBJ")
         return;
+    int start_eip = readInt(content, 4);
+    int start_esp = readInt(content, 8);
+    int memorySize = readInt(content, 12);
+    memory->initMemory(memorySize);
+
+    for (int i = 20; i < content.size();)
+    {
+        int attr = readInt(content, i);
+        int origin = readInt(content, i + 4);
+        int length = readInt(content, i + 8);
+        i += 12;
+        if (attr & 2) // placeholder
+            memory->initSegment(origin, length, attr);
+        else
+        {
+            memory->initSegment(origin, content.mid(i, length), attr);
+            i += length;
+        }
+    }
 }

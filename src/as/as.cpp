@@ -27,17 +27,17 @@
 
 /* Object file format (numbers are little-endian)
 
-  char header[5]: "YYOBJ"
+  char header[4]: "YOBJ"
   int start_eip, start_esp
   int memory_size;
   int segment_count;
 
   for every segment:
 
-  int type; // 0 - read only, 1 - read write
+  int attr; // Flags: 1 - writable, 2 - empty placeholder
   int origin; // origin address
   int length; // in bytes, the segment will be placed at [origin, origin + segment_length - 1] in memory
-  char content[]; // content
+  char content[]; // content (exist when attr & 2 is false)
 
   supported segments:
   */
