@@ -24,12 +24,11 @@
 #include "Memory.h"
 #include "Wire.h"
 
-#define STAGE_P    0
-#define STAGE_F    1
-#define STAGE_D    2
-#define STAGE_E    3
-#define STAGE_M    4
-#define STAGE_W    5
+#define STAGE_F    0
+#define STAGE_D    1
+#define STAGE_E    2
+#define STAGE_M    3
+#define STAGE_W    4
 
 class VM
 {
@@ -42,7 +41,7 @@ public:
 private:
     Memory *memory;
     Wire *wire;
-    VMWorker *stageWorkers[6];
+    VMWorker *stageWorkers[5];
 };
 
 #endif

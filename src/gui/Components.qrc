@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>components/Stage_D.js</file>
+        <file>components/Stage_E.js</file>
+        <file>components/Stage_F.js</file>
+        <file>components/Stage_M.js</file>
+        <file>components/Stage_W.js</file>
+    </qresource>
+</RCC>
