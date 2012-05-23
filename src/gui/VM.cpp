@@ -21,6 +21,16 @@
 
 #include "VM.h"
 
+#define STAGE_F    0
+#define STAGE_D    1
+#define STAGE_E    2
+#define STAGE_M    3
+#define STAGE_W    4
+
+const QString stageNames[5] = {"F", "D", "E", "M", "W"};
+
+Q_GLOBAL_STATIC(VM, d)
+
 static int readInt(const QByteArray &bytes, int addr)
 {
     return * (int *) bytes.constData();
@@ -28,14 +38,55 @@ static int readInt(const QByteArray &bytes, int addr)
 
 VM::VM()
 {
-    memory = new Memory();
-    wire = new Wire();
+    m_memory = new Memory();
+    m_reg = new Wire();
+    m_wire = new Wire();
+    m_workerSemaphore = new QSemaphore();
+    m_monitorSemaphore = new QSemaphore();
+    for (int i = 0; i < 5; i++)
+        stageWorkers[i] = new VMWorker(QString(":/components/Stage_%1.js").arg(stageNames[i]));
 }
 
 VM::~VM()
 {
-    delete memory;
-    delete wire;
+    delete m_memory;
+    delete m_reg;
+    delete m_wire;
+}
+
+VM *VM::self()
+{
+    return d();
+}
+
+VMWorker *VM::worker(int id)
+{
+    return d()->stageWorkers[id];
+}
+
+QSemaphore *VM::workerSemaphore()
+{
+    return d()->m_workerSemaphore;
+}
+
+QSemaphore *VM::monitorSemaphore()
+{
+    return d()->m_monitorSemaphore;
+}
+
+Memory *VM::memory()
+{
+    return d()->m_memory;
+}
+
+Wire *VM::reg()
+{
+    return d()->m_reg;
+}
+
+Wire *VM::wire()
+{
+    return d()->m_wire;
 }
 
 void VM::loadObject(const QString &fileName)
@@ -49,7 +100,7 @@ void VM::loadObject(const QString &fileName)
     int start_eip = readInt(content, 4);
     int start_esp = readInt(content, 8);
     int memorySize = readInt(content, 12);
-    memory->initMemory(memorySize);
+    d()->m_memory->initMemory(memorySize);
 
     for (int i = 20; i < content.size();)
     {
@@ -58,11 +109,15 @@ void VM::loadObject(const QString &fileName)
         int length = readInt(content, i + 8);
         i += 12;
         if (attr & 2) // placeholder
-            memory->initSegment(origin, length, attr);
+            d()->m_memory->initSegment(origin, length, attr);
         else
         {
-            memory->initSegment(origin, content.mid(i, length), attr);
+            d()->m_memory->initSegment(origin, content.mid(i, length), attr);
             i += length;
         }
     }
+}
+
+void VM::run()
+{
 }

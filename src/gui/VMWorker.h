@@ -22,6 +22,10 @@
 
 #include <QThread>
 #include <QScriptEngine>
+#include <QSemaphore>
+
+#include "Memory.h"
+#include "Wire.h"
 
 class VMWorker: public QThread
 {
@@ -30,6 +34,8 @@ class VMWorker: public QThread
 public:
     VMWorker(const QString &fileName);
     virtual ~VMWorker();
+
+    void run();
 
 private:
     QScriptEngine *engine;

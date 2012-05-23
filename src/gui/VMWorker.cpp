@@ -37,3 +37,7 @@ VMWorker::~VMWorker()
 {
     delete engine;
 }
+
+void VMWorker::run()
+{
+}

@@ -20,27 +20,36 @@
 #ifndef VM_H
 #define VM_H
 
+#include <QThread>
+#include <QSemaphore>
+
 #include "VMWorker.h"
 #include "Memory.h"
 #include "Wire.h"
 
-#define STAGE_F    0
-#define STAGE_D    1
-#define STAGE_E    2
-#define STAGE_M    3
-#define STAGE_W    4
-
-class VM
+class VM: public QThread
 {
+    Q_OBJECT
+
 public:
     VM();
     virtual ~VM();
 
-    void loadObject(const QString &fileName);
+    VM *self();
+    static VMWorker *worker(int id);
+    static QSemaphore *workerSemaphore();
+    static QSemaphore *monitorSemaphore();
+    static Memory *memory();
+    static Wire *reg();
+    static Wire *wire();
+
+    static void loadObject(const QString &fileName);
+    void run();
 
 private:
-    Memory *memory;
-    Wire *wire;
+    QSemaphore *m_workerSemaphore, *m_monitorSemaphore;
+    Memory *m_memory;
+    Wire *m_reg, *m_wire;
     VMWorker *stageWorkers[5];
 };
 
