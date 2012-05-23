@@ -34,6 +34,14 @@ void Wire::clearState()
     memset(used, 0, sizeof used);
 }
 
+bool Wire::state(const QString &_key)
+{
+    uint h = qHash(_key) % HASH_SIZE;
+    while (key[h] != _key)
+        h = (h + 1) % HASH_SIZE;
+    return used[h];
+}
+
 void Wire::reserve(const QString &_key)
 {
     uint h = qHash(_key) % HASH_SIZE;

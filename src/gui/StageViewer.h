@@ -17,32 +17,28 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef WIRE_H
-#define WIRE_H
+#ifndef STAGEVIEWER_H
+#define STAGEVIEWER_H
 
-// A thread-safe class for holding pipeline registers
+#include <QWidget>
+#include <QLabel>
 
-#include <QString>
+#include "Wire.h"
 
-#define HASH_SIZE 4096
-
-class Wire
+class StageViewer: public QWidget
 {
 public:
-    Wire();
-    virtual ~Wire();
+    StageViewer(Wire *awire, QStringList wireList, QWidget *parent = 0);
+    ~StageViewer();
 
-    void clearState();
-    bool state(const QString &_key);
-    void copyFrom(const Wire &src);
-    void reserve(const QString &_key);
-    int readWire(const QString &_key) const;
-    void writeWire(const QString &_key, int _value);
+    void updateDisplay(QStringList actionString);
 
 private:
-    QString key[HASH_SIZE];
-    int value[HASH_SIZE];
-    bool used[HASH_SIZE];
+    Wire *wire;
+    QStringList woi; // Wires of interest
+
+    QLabel *actionLabels[4];
+    QLabel *wireLabels[20];
 };
 
 #endif

@@ -1,4 +1,4 @@
-set(Y86_SRCS main.cpp MainWindow.cpp VM.cpp VMWorker.cpp Memory.cpp Wire.cpp)
+set(Y86_SRCS main.cpp MainWindow.cpp StageViewer.cpp VM.cpp VMWorker.cpp Memory.cpp Wire.cpp)
 
 if(WIN32)
     add_executable(Y86 WIN32 ${Y86_SRCS})
