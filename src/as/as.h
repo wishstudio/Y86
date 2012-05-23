@@ -17,34 +17,20 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef VMWORKER_H
-#define VMWORKER_H
+#ifndef AS_H
+#define AS_H
 
-#include <QThread>
-#include <QScriptEngine>
-#include <QStringList>
-
-#include "Memory.h"
-#include "Wire.h"
-
-class VMWorker: public QThread
-{
-    Q_OBJECT
-
-public:
-    VMWorker(int id, const QString &fileName);
-    virtual ~VMWorker();
-
-    void stopWorker();
-    void addWorkerAction(const QString &action);
-    QStringList workerActions() const;
-    void run();
-
-private:
-    QScriptEngine *engine;
-    bool shouldStop;
-    QStringList actions;
-    QStringList inWires, outWires;
-};
+#define OP_NOP     0x00
+#define OP_HALT    0x01
+#define OP_RRMOVL  0x02
+#define OP_IRMOVL  0x03
+#define OP_RMMOVL  0x04
+#define OP_MRMOVL  0x05
+#define OP_OP      0x06
+#define OP_JMP     0x07
+#define OP_CALL    0x08
+#define OP_RET     0x09
+#define OP_PUSHL   0x0A
+#define OP_POPL    0x0B
 
 #endif

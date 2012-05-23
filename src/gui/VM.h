@@ -27,6 +27,8 @@
 #include "Memory.h"
 #include "Wire.h"
 
+#define WORKERS_COUNT     5
+
 class VM: public QThread
 {
     Q_OBJECT
@@ -41,16 +43,21 @@ public:
     static QSemaphore *monitorSemaphore();
     static Memory *memory();
     static Wire *reg();
-    static Wire *wire();
+    static Wire *wireForRead();
+    static Wire *wireForWrite();
+    static void reserveWire(const QString &wire);
 
     static void loadObject(const QString &fileName);
+    static void step();
+    static void startRunning();
+
     void run();
 
 private:
     QSemaphore *m_workerSemaphore, *m_monitorSemaphore;
     Memory *m_memory;
-    Wire *m_reg, *m_wire;
-    VMWorker *stageWorkers[5];
+    Wire *m_reg, *m_wire, *m_nextWire;
+    VMWorker *stageWorkers[WORKERS_COUNT];
 };
 
 #endif

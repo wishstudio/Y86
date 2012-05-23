@@ -34,7 +34,7 @@ public:
 
     void clearState();
     bool state(const QString &_key);
-    void copyFrom(const Wire &src);
+    void copyFrom(Wire *src);
     void reserve(const QString &_key);
     int readWire(const QString &_key) const;
     void writeWire(const QString &_key, int _value);

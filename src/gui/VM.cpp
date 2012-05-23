@@ -41,10 +41,11 @@ VM::VM()
     m_memory = new Memory();
     m_reg = new Wire();
     m_wire = new Wire();
+    m_nextWire = new Wire();
     m_workerSemaphore = new QSemaphore();
     m_monitorSemaphore = new QSemaphore();
-    for (int i = 0; i < 5; i++)
-        stageWorkers[i] = new VMWorker(QString(":/components/Stage_%1.js").arg(stageNames[i]));
+    for (int i = 0; i < WORKERS_COUNT; i++)
+        stageWorkers[i] = new VMWorker(i, QString(":/components/Stage_%1.js").arg(stageNames[i]));
 }
 
 VM::~VM()
@@ -52,6 +53,7 @@ VM::~VM()
     delete m_memory;
     delete m_reg;
     delete m_wire;
+    delete m_nextWire;
 }
 
 VM *VM::self()
@@ -84,9 +86,20 @@ Wire *VM::reg()
     return d()->m_reg;
 }
 
-Wire *VM::wire()
+Wire *VM::wireForRead()
 {
     return d()->m_wire;
+}
+
+Wire *VM::wireForWrite()
+{
+    return d()->m_nextWire;
+}
+
+void VM::reserveWire(const QString &wire)
+{
+    d()->m_wire->reserve(wire);
+    d()->m_nextWire->reserve(wire);
 }
 
 void VM::loadObject(const QString &fileName)
@@ -118,6 +131,24 @@ void VM::loadObject(const QString &fileName)
     }
 }
 
+void VM::step()
+{
+}
+
+void VM::startRunning()
+{
+}
+
 void VM::run()
 {
+    m_nextWire->clearState();
+    for (int i = 0; i < WORKERS_COUNT; i++)
+        stageWorkers[i]->start();
+    for (;;)
+    {
+        m_workerSemaphore->acquire(WORKERS_COUNT);
+        m_wire->copyFrom(m_nextWire);
+        m_nextWire->clearState();
+        m_monitorSemaphore->release(WORKERS_COUNT);
+    }
 }

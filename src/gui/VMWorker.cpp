@@ -18,19 +18,120 @@
  */
 
 #include <QFile>
-#include <QScriptProgram>
-#include <QScriptValue>
+#include <QSemaphore>
 
+#include "as/as.h"
+
+#include "VM.h"
 #include "VMWorker.h"
 
-VMWorker::VMWorker(const QString &fileName)
+static QScriptValue readWire(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return VM::wireForRead()->readWire(context->argument(0).toString());
+}
+
+static QScriptValue writeWire(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 2)
+        return engine->undefinedValue();
+    VM::wireForWrite()->writeWire(context->argument(0).toString(), context->argument(1).toInt32());
+    return engine->undefinedValue();
+}
+
+static QScriptValue readRegister(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return VM::reg()->readWire(context->argument(0).toString());
+}
+
+static QScriptValue writeRegister(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 2)
+        return engine->undefinedValue();
+    VM::reg()->writeWire(context->argument(0).toString(), context->argument(1).toInt32());
+    return engine->undefinedValue();
+}
+
+static QScriptValue readMemoryChar(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return VM::memory()->readChar(context->argument(0).toInt32());
+}
+
+static QScriptValue readMemoryInt(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return VM::memory()->readInt(context->argument(0).toInt32());
+}
+
+static QScriptValue writeMemoryInt(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 2)
+        return engine->undefinedValue();
+    return VM::memory()->writeInt(context->argument(0).toInt32(), context->argument(1).toInt32());
+}
+
+static QScriptValue addAction(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    VM::worker(engine->globalObject().property("__id").toInt32())->addWorkerAction(context->argument(0).toString());
+    return engine->undefinedValue();
+}
+
+VMWorker::VMWorker(int id, const QString &fileName)
 {
     QFile file(fileName);
     file.open(QIODevice::ReadOnly);
     QScriptProgram program = QString(file.readAll());
     file.close();
+
     engine = new QScriptEngine();
+    QScriptValue global = engine->globalObject();
+    global.setProperty("__id", id, QScriptValue::ReadOnly);
+    global.setProperty("readWire", engine->newFunction(readWire));
+    global.setProperty("writeWire", engine->newFunction(writeWire));
+    global.setProperty("readRegister", engine->newFunction(readRegister));
+    global.setProperty("writeRegister", engine->newFunction(writeRegister));
+    global.setProperty("readMemoryChar", engine->newFunction(readMemoryChar));
+    global.setProperty("readMemoryInt", engine->newFunction(readMemoryInt));
+    global.setProperty("writeMemoryInt", engine->newFunction(writeMemoryInt));
+    global.setProperty("addAction", engine->newFunction(addAction));
+
+    global.setProperty("OP_NOP", OP_NOP);
+    global.setProperty("OP_HALT", OP_HALT);
+    global.setProperty("OP_RRMOVL", OP_RRMOVL);
+    global.setProperty("OP_IRMOVL", OP_IRMOVL);
+    global.setProperty("OP_RMMOVL", OP_RMMOVL);
+    global.setProperty("OP_MRMOVL", OP_MRMOVL);
+    global.setProperty("OP_OP", OP_OP);
+    global.setProperty("OP_JMP", OP_JMP);
+    global.setProperty("OP_CALL", OP_CALL);
+    global.setProperty("OP_RET", OP_RET);
+    global.setProperty("OP_PUSHL", OP_PUSHL);
+    global.setProperty("OP_POPL", OP_POPL);
     engine->evaluate(program);
+
+    QScriptValue in = global.property("inWires").call();
+    int in_cnt = in.property("length").toInt32();
+    for (int i = 0; i < in_cnt; i++)
+        inWires.push_back(in.property(i).toString());
+
+    QScriptValue out = global.property("outWires").call();
+    int out_cnt = in.property("length").toInt32();
+    for (int i = 0; i < out_cnt; i++)
+        outWires.push_back(out.property(i).toString());
+
+    foreach (QString wire, inWires)
+        VM::reserveWire(wire);
+
+    foreach (QString wire, outWires)
+        VM::reserveWire(wire);
 }
 
 VMWorker::~VMWorker()
@@ -38,6 +139,30 @@ VMWorker::~VMWorker()
     delete engine;
 }
 
+void VMWorker::stopWorker()
+{
+    shouldStop = true;
+}
+
+void VMWorker::addWorkerAction(const QString &action)
+{
+    actions.push_back(action);
+}
+
+QStringList VMWorker::workerActions() const
+{
+    return actions;
+}
+
 void VMWorker::run()
 {
+    shouldStop = false;
+    for (;;)
+    {
+        engine->globalObject().property("cycle").call();
+        VM::workerSemaphore()->release();
+        VM::monitorSemaphore()->acquire();
+        if (shouldStop)
+            break;
+    }
 }

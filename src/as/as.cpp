@@ -23,7 +23,8 @@
 #include <cstdio>
 #include <cctype>
 
-#include "Segment.h"
+#include "as.h"
+#include "segment.h"
 
 /* Object file format (numbers are little-endian)
 
@@ -42,7 +43,7 @@
   supported segments:
   */
 
-#define REGISTER_PAIR(ra, rb) (((ra) << 4) | rb)
+#define PAIR(ra, rb) (((ra) << 4) | rb)
 
 enum tokenType {tkEOF, tkComma, tkDot, tkRegister, tkNumber, tkLabel, tkLP, tkRP} tt;
 std::string registerName[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp"};
@@ -212,12 +213,12 @@ void compile()
             if (token == "nop")
             {
                 getToken();
-                segments.back().putChar(0x00);
+                segments.back().putChar(PAIR(OP_NOP, 0));
             }
             else if (token == "halt")
             {
                 getToken();
-                segments.back().putChar(0x10);
+                segments.back().putChar(PAIR(OP_HALT, 0));
             }
             else if (token == "rrmovl")
             {
@@ -227,8 +228,8 @@ void compile()
                 expectComma();
                 int rB = tr;
                 expectRegister();
-                segments.back().putChar(0x20);
-                segments.back().putChar(REGISTER_PAIR(rA, rB));
+                segments.back().putChar(PAIR(OP_RRMOVL, 0));
+                segments.back().putChar(PAIR(rA, rB));
             }
             else if (token == "irmovl")
             {
@@ -238,8 +239,8 @@ void compile()
                 expectComma();
                 int rB = tr;
                 expectRegister();
-                segments.back().putChar(0x30);
-                segments.back().putChar(REGISTER_PAIR(8, rB));
+                segments.back().putChar(PAIR(OP_IRMOVL, 0));
+                segments.back().putChar(PAIR(8, rB));
                 segments.back().put(num);
             }
             else if (token == "rmmovl")
@@ -260,8 +261,8 @@ void compile()
                 }
                 else
                     rB = 8;
-                segments.back().putChar(0x40);
-                segments.back().putChar(REGISTER_PAIR(rA, rB));
+                segments.back().putChar(PAIR(OP_RMMOVL, 0));
+                segments.back().putChar(PAIR(rA, rB));
                 putAddr(label);
             }
             else if (token == "mrmovl")
@@ -282,37 +283,37 @@ void compile()
                 expectComma();
                 int rA = tr;
                 expectRegister();
-                segments.back().putChar(0x50);
-                segments.back().putChar(REGISTER_PAIR(rA, rB));
+                segments.back().putChar(PAIR(OP_MRMOVL, 0));
+                segments.back().putChar(PAIR(rA, rB));
                 putAddr(label);
             }
             else if (token == "call")
             {
                 getToken();
                 std::string label = token;
-                segments.back().putChar(0x80);
+                segments.back().putChar(PAIR(OP_CALL, 0));
                 putAddr(label);
             }
             else if (token == "ret")
             {
                 getToken();
-                segments.back().putChar(0x90);
+                segments.back().putChar(PAIR(OP_RET, 0));
             }
             else if (token == "pushl")
             {
                 getToken();
                 int rA = tr;
                 expectRegister();
-                segments.back().putChar(0xA0);
-                segments.back().putChar(REGISTER_PAIR(rA, 8));
+                segments.back().putChar(PAIR(OP_PUSHL, 0));
+                segments.back().putChar(PAIR(rA, 8));
             }
             else if (token == "popl")
             {
                 getToken();
                 int rA = tr;
                 expectRegister();
-                segments.back().putChar(0xB0);
-                segments.back().putChar(REGISTER_PAIR(rA, 8));
+                segments.back().putChar(PAIR(OP_POPL, 0));
+                segments.back().putChar(PAIR(rA, 8));
             }
         }
     }

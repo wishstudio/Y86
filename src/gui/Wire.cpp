@@ -34,6 +34,16 @@ void Wire::clearState()
     memset(used, 0, sizeof used);
 }
 
+void Wire::copyFrom(Wire *src)
+{
+    for (int i = 0; i < HASH_SIZE; i++)
+    {
+        key[i] = src->key[i];
+        value[i] = src->value[i];
+    }
+    memset(used, 0, sizeof used);
+}
+
 bool Wire::state(const QString &_key)
 {
     uint h = qHash(_key) % HASH_SIZE;

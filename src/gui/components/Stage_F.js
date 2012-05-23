@@ -29,8 +29,8 @@ function outWires()
 
 function cycle()
 {
-    var eip = getWire("F_valP");
-    var a = getMemoryChar(eip);
+    var eip = readWire("F_valP");
+    var a = readMemoryChar(eip);
     var icode = (a & 0xF0) >> 4;
     var ifun = a & 0x0F;
     writeWire("F_icode", icode);
@@ -49,7 +49,7 @@ function cycle()
     case OP_OPL:
     case OP_PUSHL:
     case OP_POPL:
-        a = getMemoryChar(eip + 1);
+        a = readMemoryChar(eip + 1);
         writeWire("F_rA", (a & 0xF0) >> 4);
         writeWire("F_rB", a & 0x0F);
         writeWire("F_valP", eip + 2);
@@ -60,10 +60,10 @@ function cycle()
     case OP_IRMOVL:
     case OP_RMMOVL:
     case OP_MRMOVL:
-        a = getMemoryChar(eip + 1);
+        a = readMemoryChar(eip + 1);
         writeWire("F_rA", (a & 0xF0) >> 4);
         writeWire("F_rB", a & 0x0F);
-        writeWire("F_valC", getMemoryInt(eip + 2));
+        writeWire("F_valC", readMemoryInt(eip + 2));
         writeWire("F_valP", eip + 6);
         addAction("rA:rB <- M1[%eip + 1]");
         addAction("valC <- M4[%eip + 2]");
@@ -72,7 +72,7 @@ function cycle()
 
     case OP_JMP:
     case OP_CALL:
-        writeWire("F_valC", getMemoryInt(eip + 1));
+        writeWire("F_valC", readMemoryInt(eip + 1));
         writeWire("F_valP", eip + 5);
         addAction("valC <- M4[%eip + 1]");
         addAction("valP <- %eip + 5");
