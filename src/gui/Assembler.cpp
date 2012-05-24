@@ -17,58 +17,48 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include <string>
-#include <vector>
-#include <map>
-#include <cstdio>
-#include <cctype>
+#include <QVector>
+#include <QMap>
+#include <QPair>
+#include <QFile>
+#include <QTextStream>
 
-#include "as.h"
-#include "segment.h"
-
-/* Object file format (numbers are little-endian)
-
-  char header[4]: "YOBJ"
-  int start_eip, start_esp
-  int memory_size;
-  int segment_count;
-
-  for every segment:
-
-  int attr; // Flags: 1 - writable, 2 - empty placeholder
-  int origin; // origin address
-  int length; // in bytes, the segment will be placed at [origin, origin + segment_length - 1] in memory
-  char content[]; // content (exist when attr & 2 is false)
-
-  supported segments:
-  */
+#include "Assembler.h"
+#include "Segment.h"
 
 #define PAIR(ra, rb) (((ra) << 4) | rb)
 
-enum tokenType {tkEOF, tkComma, tkDot, tkRegister, tkNumber, tkLabel, tkLP, tkRP} tt;
-std::string registerName[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp"};
-std::map<std::string, std::pair<int, int> > symbolTable;
-std::vector<std::pair<std::pair<std::string, int>, std::pair<int, int> > > patchList;
+static enum tokenType {tkEOF, tkComma, tkColon, tkDot, tkRegister, tkNumber, tkLabel, tkLP, tkRP} tt;
+static QString registerName[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp"};
+static QMap<QString, QPair<int, int> > symbolTable;
+static QVector<QPair<QPair<QString, int>, QPair<int, int> > > patchList;
 // label, line number, segment id, segment offset
-std::vector<Segment> segments;
+static QVector<Segment> segments;
+static QFile inFile;
+static QTextStream inTextStream;
 
-int line_cnt, tr, tn;
-std::string token;
-char ch;
+static int line_cnt, tr, tn;
+static QString token;
+static char ch;
 
-void error(std::string error_message)
+static void error(QString error_message)
 {
-    fprintf(stderr, "Compile error at line %d: %s\n", line_cnt, error_message.c_str());
+    qDebug("Compile error at line %d: %s\n", line_cnt, qPrintable(error_message));
     exit(1);
 }
 
-void getToken()
+static void getChar()
+{
+    inTextStream >> ch;
+}
+
+static void getToken()
 {
     while (isspace(ch))
     {
         if (ch == '\n')
             line_cnt++;
-        ch = getchar();
+        getChar();
     }
     if (ch == '%' || isalpha(ch) || ch == '_')
     {
@@ -82,11 +72,11 @@ void getToken()
             tt = tkLabel;
             token = (char) tolower(ch);
         }
-        ch = getchar();
+        getChar();
         while (isalpha(ch) || isdigit(ch) || ch == '_')
         {
             token = token + (char) tolower(ch);
-            ch = getchar();
+            getChar();
         }
         if (tt == tkRegister)
         {
@@ -105,17 +95,17 @@ void getToken()
     {
         if (ch == '$')
         {
-            ch = getchar();
+            getChar();
             if (!isdigit(ch))
                 error("Number expected after $.");
         }
         int base = 10;
         if (ch == '0')
         {
-            ch = getchar();
+            getChar();
             if (ch == 'x')
             {
-                ch = getchar();
+                getChar();
                 if (!isdigit(ch))
                     error("Number expected after 0x.");
                 base = 16;
@@ -128,101 +118,89 @@ void getToken()
                 error("Number expected after 0.");
         }
         token = ch;
-        ch = getchar();
+        getChar();
         while (isdigit(ch) || (tolower(ch) >= 'a' && tolower(ch) <= 'f'))
         {
             token = token + ch;
-            ch = getchar();
+            getChar();
         }
         // TODO
     }
     switch (ch)
     {
-    case '.': tt = tkDot; ch = getchar(); break;
-    case ',': tt = tkComma; ch = getchar(); break;
-    case '(': tt = tkLP; ch = getchar(); break;
-    case ')': tt = tkRP; ch = getchar(); break;
+    case '.': tt = tkDot; getChar(); break;
+    case ',': tt = tkComma; getChar(); break;
+    case ':': tt = tkColon; getChar(); break;
+    case '(': tt = tkLP; getChar(); break;
+    case ')': tt = tkRP; getChar(); break;
     }
 }
 
-void expectRegister()
+static void expectRegister()
 {
     if (tt != tkRegister)
         error("Register expected.");
     getToken();
 }
 
-void expectLabel()
+static void expectLabel()
 {
     if (tt != tkLabel)
         error("Label expected.");
     getToken();
 }
 
-void expectNumber()
+static void expectNumber()
 {
     if (tt != tkNumber)
         error("Number expected.");
     getToken();
 }
 
-void expectComma()
+static void expectComma()
 {
     if (tt != tkComma)
         error("Comma expected.");
     getToken();
 }
 
-void expectRP()
+static void expectRP()
 {
     if (tt != tkRP)
         error("')' expected.");
     getToken();
 }
 
-void putAddr(std::string label)
+static void putAddr(QString label)
 {
     if (symbolTable.count(label))
     {
-        std::pair<int, int> addr = symbolTable.at(label);
+        QPair<int, int> addr = symbolTable.value(label);
         segments.back().put(segments.at(addr.first).origin() + addr.second);
     }
     else
     {
-        patchList.push_back(std::make_pair(std::make_pair(label, line_cnt), std::make_pair(segments.size() - 1, segments.back().addr())));
+        patchList.push_back(qMakePair(qMakePair(label, line_cnt), qMakePair(segments.size() - 1, segments.back().addr())));
         segments.back().put(0);
     }
 }
 
-void compile()
+static void compile()
 {
-    while (tt == tkDot)
-    {
-        getToken();
-        if (token == "text")
-        {
-        }
-    }
-
     segments.push_back(Segment(0));
 
     for (;;)
     {
         if (tt == tkLabel)
         {
-            if (token == "nop")
-            {
-                getToken();
+            QString label = token;
+            getToken();
+            if (label == "nop")
                 segments.back().putChar(PAIR(OP_NOP, 0));
-            }
-            else if (token == "halt")
-            {
-                getToken();
+            else if (label == "halt")
                 segments.back().putChar(PAIR(OP_HALT, 0));
-            }
-            else if (token == "rrmovl")
+            else if (label == "rrmovl")
             {
-                getToken();
                 int rA = tr;
                 expectRegister();
                 expectComma();
@@ -231,9 +209,8 @@ void compile()
                 segments.back().putChar(PAIR(OP_RRMOVL, 0));
                 segments.back().putChar(PAIR(rA, rB));
             }
-            else if (token == "irmovl")
+            else if (label == "irmovl")
             {
-                getToken();
                 int num = tn;
                 expectNumber();
                 expectComma();
@@ -243,13 +220,12 @@ void compile()
                 segments.back().putChar(PAIR(8, rB));
                 segments.back().put(num);
             }
-            else if (token == "rmmovl")
+            else if (label == "rmmovl")
             {
-                getToken();
                 int rA = tr;
                 expectRegister();
                 expectComma();
-                std::string label = token;
+                QString label = token;
                 expectLabel();
                 int rB;
                 if (tt == tkLP)
@@ -265,10 +241,9 @@ void compile()
                 segments.back().putChar(PAIR(rA, rB));
                 putAddr(label);
             }
-            else if (token == "mrmovl")
+            else if (label == "mrmovl")
             {
-                getToken();
-                std::string label = token;
+                QString label = token;
                 expectLabel();
                 int rB;
                 if (tt == tkLP)
@@ -287,29 +262,25 @@ void compile()
                 segments.back().putChar(PAIR(rA, rB));
                 putAddr(label);
             }
-            else if (token == "call")
+            else if (label == "call")
             {
-                getToken();
-                std::string label = token;
+                QString label = token;
                 segments.back().putChar(PAIR(OP_CALL, 0));
                 putAddr(label);
             }
-            else if (token == "ret")
+            else if (label == "ret")
             {
-                getToken();
                 segments.back().putChar(PAIR(OP_RET, 0));
             }
-            else if (token == "pushl")
+            else if (label == "pushl")
             {
-                getToken();
                 int rA = tr;
                 expectRegister();
                 segments.back().putChar(PAIR(OP_PUSHL, 0));
                 segments.back().putChar(PAIR(rA, 8));
             }
-            else if (token == "popl")
+            else if (label == "popl")
             {
-                getToken();
                 int rA = tr;
                 expectRegister();
                 segments.back().putChar(PAIR(OP_POPL, 0));
@@ -319,18 +290,11 @@ void compile()
     }
 }
 
-int main(int argc, char **argv)
+void Assembler::compileFile(const QString &fileName)
 {
-    if (argc != 2)
-        puts("Usage: as <y86 assembler file>");
-    std::string infile(argv[1]);
-    int p = infile.find(".ya");
-    std::string outfile = infile.replace(p, 3, ".yo");
-    freopen(infile.c_str(), "r", stdin);
-    freopen(outfile.c_str(), "w", stdout);
     line_cnt = 1;
-    ch = getchar();
+    inFile.setFileName(fileName);
+    getChar();
     getToken();
     compile();
-    return 0;
 }

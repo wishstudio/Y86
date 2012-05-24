@@ -17,7 +17,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include "segment.h"
+#include "Segment.h"
 
 Segment::Segment(int _origin)
     : m_origin(_origin)

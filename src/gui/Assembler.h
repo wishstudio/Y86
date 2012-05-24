@@ -33,4 +33,12 @@
 #define OP_PUSHL   0x0A
 #define OP_POPL    0x0B
 
+#include <Qt>
+
+class Assembler
+{
+public:
+    static void compileFile(const QString &fileName);
+};
+
 #endif

@@ -20,7 +20,7 @@
 #include <QFile>
 #include <QSemaphore>
 
-#include "as/as.h"
+#include "Assembler.h"
 
 #include "VM.h"
 #include "VMWorker.h"

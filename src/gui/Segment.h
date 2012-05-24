@@ -20,8 +20,8 @@
 #ifndef SEGMENT_H
 #define SEGMENT_H
 
-#include <string>
-#include <vector>
+#include <Qt>
+#include <QVector>
 
 class Segment
 {
@@ -36,7 +36,7 @@ public:
     void putChar(char value);
 
 private:
-    std::vector<char> mem;
+    QVector<char> mem;
     int m_origin;
 };
 
