@@ -20,7 +20,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include <QByteArray>
+#include <QVector>
 
 class Memory
 {
@@ -28,16 +28,26 @@ public:
     Memory();
     virtual ~Memory();
 
-    void initMemory(int size);
-    void initSegment(int origin, const QByteArray &content, int attr);
-    void initSegment(int origin, int size, int attr);
+    void clear();
+
+    /* For use with the assembler */
+    int addr() const;
+    void setOrigin(int origin);
+    void setAttr(bool attr);
+    void putChar(char value);
+    void putShort(short value);
+    void put(int value);
+    void patch(int addr, int value);
+
+    /* For use with the VM */
     char readChar(int addr) const;
     int readInt(int addr) const;
     bool writeInt(int addr, int value);
 
 private:
-    char *mem;
-    int *attrMask;
+    QVector<char> mem;
+    QVector<int> attrMask;
+    int currentAttr;
 };
 
 #endif

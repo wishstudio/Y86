@@ -19,23 +19,22 @@
 
 #include <QVector>
 #include <QMap>
-#include <QPair>
 #include <QFile>
 #include <QTextStream>
 
 #include "Assembler.h"
-#include "Segment.h"
 
 #define PAIR(ra, rb) (((ra) << 4) | rb)
 
 static enum tokenType {tkEOF, tkComma, tkColon, tkDot, tkRegister, tkNumber, tkLabel, tkLP, tkRP} tt;
 static QString registerName[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp"};
-static QMap<QString, QPair<int, int> > symbolTable;
-static QVector<QPair<QPair<QString, int>, QPair<int, int> > > patchList;
-// label, line number, segment id, segment offset
-static QVector<Segment> segments;
+static QMap<QString, int> symbolTable;
+static QVector<QPair<QString, int> > patchList;
 static QFile inFile;
 static QTextStream inTextStream;
+static Memory *memory;
+static int startEIP;
+static int stackSize;
 
 static int line_cnt, tr, tn;
 static QString token;
@@ -49,7 +48,10 @@ static void error(QString error_message)
 
 static void getChar()
 {
-    inTextStream >> ch;
+    if (inTextStream.atEnd())
+        ch = -1;
+    else
+        inTextStream >> ch;
 }
 
 static void getToken()
@@ -60,7 +62,9 @@ static void getToken()
             line_cnt++;
         getChar();
     }
-    if (ch == '%' || isalpha(ch) || ch == '_')
+    if (ch == -1)
+        tt = tkEOF;
+    else if (ch == '%' || isalpha(ch) || ch == '_')
     {
         if (ch == '%')
         {
@@ -174,31 +178,74 @@ static void expectRP()
 static void putAddr(QString label)
 {
     if (symbolTable.count(label))
-    {
-        QPair<int, int> addr = symbolTable.value(label);
-        segments.back().put(segments.at(addr.first).origin() + addr.second);
-    }
+        memory->put(symbolTable.value(label));
     else
     {
-        patchList.push_back(qMakePair(qMakePair(label, line_cnt), qMakePair(segments.size() - 1, segments.back().addr())));
-        segments.back().put(0);
+        patchList.push_back(qMakePair(label, memory->addr()));
+        memory->put(0);
     }
 }
 
 static void compile()
 {
-    segments.push_back(Segment(0));
-
     for (;;)
     {
-        if (tt == tkLabel)
+        if (tt == tkEOF)
+            break;
+        else if (tt == tkDot)
+        {
+            getToken();
+            QString label = token;
+            expectLabel();
+            if (label == "text")
+            {
+                if (startEIP == -1)
+                    startEIP = memory->addr();
+                memory->setAttr(false);
+                getToken();
+            }
+            else if (label == "stacksize")
+            {
+                getToken();
+                stackSize = tn;
+                expectNumber();
+            }
+            else if (label == "rodata")
+            {
+                memory->setAttr(false);
+                getToken();
+            }
+            else if (label == "data")
+            {
+                memory->setAttr(true);
+                getToken();
+            }
+            else if (label == "origin")
+            {
+                int origin = tn;
+                expectNumber();
+                memory->setOrigin(origin);
+            }
+            else if (label == "reserve")
+            {
+                int reserveCount = tn;
+                expectNumber();
+                memory->setOrigin(memory->addr() + reserveCount);
+            }
+        }
+        else if (tt == tkLabel)
         {
             QString label = token;
             getToken();
-            if (label == "nop")
-                segments.back().putChar(PAIR(OP_NOP, 0));
+            if (tt == tkColon)
+            {
+                symbolTable.insert(label, memory->addr());
+                getToken();
+            }
+            else if (label == "nop")
+                memory->putChar(PAIR(OP_NOP, 0));
             else if (label == "halt")
-                segments.back().putChar(PAIR(OP_HALT, 0));
+                memory->putChar(PAIR(OP_HALT, 0));
             else if (label == "rrmovl")
             {
                 int rA = tr;
@@ -206,8 +253,8 @@ static void compile()
                 expectComma();
                 int rB = tr;
                 expectRegister();
-                segments.back().putChar(PAIR(OP_RRMOVL, 0));
-                segments.back().putChar(PAIR(rA, rB));
+                memory->putChar(PAIR(OP_RRMOVL, 0));
+                memory->putChar(PAIR(rA, rB));
             }
             else if (label == "irmovl")
             {
@@ -216,9 +263,9 @@ static void compile()
                 expectComma();
                 int rB = tr;
                 expectRegister();
-                segments.back().putChar(PAIR(OP_IRMOVL, 0));
-                segments.back().putChar(PAIR(8, rB));
-                segments.back().put(num);
+                memory->putChar(PAIR(OP_IRMOVL, 0));
+                memory->putChar(PAIR(8, rB));
+                memory->put(num);
             }
             else if (label == "rmmovl")
             {
@@ -237,8 +284,8 @@ static void compile()
                 }
                 else
                     rB = 8;
-                segments.back().putChar(PAIR(OP_RMMOVL, 0));
-                segments.back().putChar(PAIR(rA, rB));
+                memory->putChar(PAIR(OP_RMMOVL, 0));
+                memory->putChar(PAIR(rA, rB));
                 putAddr(label);
             }
             else if (label == "mrmovl")
@@ -258,43 +305,62 @@ static void compile()
                 expectComma();
                 int rA = tr;
                 expectRegister();
-                segments.back().putChar(PAIR(OP_MRMOVL, 0));
-                segments.back().putChar(PAIR(rA, rB));
+                memory->putChar(PAIR(OP_MRMOVL, 0));
+                memory->putChar(PAIR(rA, rB));
                 putAddr(label);
             }
             else if (label == "call")
             {
                 QString label = token;
-                segments.back().putChar(PAIR(OP_CALL, 0));
+                memory->putChar(PAIR(OP_CALL, 0));
                 putAddr(label);
             }
             else if (label == "ret")
             {
-                segments.back().putChar(PAIR(OP_RET, 0));
+                memory->putChar(PAIR(OP_RET, 0));
             }
             else if (label == "pushl")
             {
                 int rA = tr;
                 expectRegister();
-                segments.back().putChar(PAIR(OP_PUSHL, 0));
-                segments.back().putChar(PAIR(rA, 8));
+                memory->putChar(PAIR(OP_PUSHL, 0));
+                memory->putChar(PAIR(rA, 8));
             }
             else if (label == "popl")
             {
                 int rA = tr;
                 expectRegister();
-                segments.back().putChar(PAIR(OP_POPL, 0));
-                segments.back().putChar(PAIR(rA, 8));
+                memory->putChar(PAIR(OP_POPL, 0));
+                memory->putChar(PAIR(rA, 8));
             }
         }
     }
 }
 
-void Assembler::compileFile(const QString &fileName)
+void Assembler::compileFile(const QString &fileName, Memory *memory)
 {
+    ::memory = memory;
+    ::memory->clear();
     line_cnt = 1;
     inFile.setFileName(fileName);
+    symbolTable.clear();
+    patchList.clear();
+    startEIP = -1;
+    /* default stack size: 16KBytes */
+    stackSize = 16384;
     getChar();
     getToken();
     compile();
+    /* allocate stack space */
+    memory->setOrigin(memory->addr() + stackSize);
+}
+
+int Assembler::getStartEIP()
+{
+    return startEIP;
+}
+
+int Assembler::getStartESP()
+{
+    return memory->addr();
 }

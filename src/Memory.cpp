@@ -21,44 +21,72 @@
 
 Memory::Memory()
 {
-    mem = 0;
-    attrMask = 0;
 }
 
 Memory::~Memory()
 {
-    delete mem;
-    delete attrMask;
 }
 
-void Memory::initMemory(int size)
+void Memory::clear()
 {
-    if (mem)
+    mem.clear();
+    attrMask.clear();
+}
+
+int Memory::addr() const
+{
+    return mem.size();
+}
+
+void Memory::setOrigin(int origin)
+{
+    int oldOrigin = mem.size();
+    mem.resize(origin);
+    attrMask.resize((origin + 31) / 32);
+    for (int i = oldOrigin; i < origin; i++)
     {
-        delete mem;
-        delete attrMask;
-    }
-    mem = new char[size];
-    int maskLen = (size + 31) / 32;
-    attrMask = new int[maskLen];
-    memset(attrMask, 0, maskLen * 4);
-}
-
-void Memory::initSegment(int origin, const QByteArray &content, int attr)
-{
-    for (int i = 0; i < content.size(); i++)
-    {
-        mem[i + origin] = content.at(i);
-        if (attr)
-            attrMask[(i + origin) / 32] |= (i + origin) % 32;
+        mem[i] = 0;
+        if (currentAttr)
+            attrMask[i / 32] |= 1 << (i % 32);
+        else
+            attrMask[i / 32] &= ~(1 << (i % 32));
     }
 }
 
-void Memory::initSegment(int origin, int size, int attr)
+void Memory::setAttr(bool attr)
 {
-    if (attr)
-        for (int i = 0; i < size; i++)
-            attrMask[(i + origin) / 32] |= (i + origin) % 32;
+    currentAttr = attr;
+}
+
+void Memory::putChar(char value)
+{
+    mem.push_back(value);
+    attrMask.resize((mem.size() + 31) / 32);
+    if (currentAttr)
+        attrMask[mem.size() / 32] |= 1 << (mem.size() % 32);
+    else
+        attrMask[mem.size() / 32] &= ~(1 << (mem.size() % 32));
+}
+
+void Memory::putShort(short value)
+{
+    char *p = (char *) &value;
+    for (int i = 0; i < 2; i++)
+        putChar(p[i]);
+}
+
+void Memory::put(int value)
+{
+    char *p = (char *) &value;
+    for (int i = 0; i < 4; i++)
+        putChar(p[i]);
+}
+
+void Memory::patch(int addr, int value)
+{
+    char *p = (char *) &value;
+    for (int i = 0; i < 4; i++)
+        mem[addr + i] = p[i];
 }
 
 char Memory::readChar(int addr) const
@@ -74,7 +102,7 @@ int Memory::readInt(int addr) const
 bool Memory::writeInt(int addr, int value)
 {
     for (int i = 0; i < 4; i++)
-        if (!(attrMask[(i + addr) / 32] & ((i + addr) % 32)))
+        if (!(attrMask[(i + addr) / 32] & (1 << ((i + addr) % 32))))
             return false;
     *(int *) &mem[addr] = value;
     return true;

@@ -19,6 +19,7 @@
 
 #include <QFile>
 
+#include "Assembler.h"
 #include "VM.h"
 
 #define STAGE_F    0
@@ -104,31 +105,7 @@ void VM::reserveWire(const QString &wire)
 
 void VM::loadObject(const QString &fileName)
 {
-    QFile file(fileName);
-    file.open(QIODevice::ReadOnly);
-    QByteArray content = file.readAll();
-    file.close();
-    if (QString(content.left(5)) != "YOBJ")
-        return;
-    int start_eip = readInt(content, 4);
-    int start_esp = readInt(content, 8);
-    int memorySize = readInt(content, 12);
-    d()->m_memory->initMemory(memorySize);
-
-    for (int i = 20; i < content.size();)
-    {
-        int attr = readInt(content, i);
-        int origin = readInt(content, i + 4);
-        int length = readInt(content, i + 8);
-        i += 12;
-        if (attr & 2) // placeholder
-            d()->m_memory->initSegment(origin, length, attr);
-        else
-        {
-            d()->m_memory->initSegment(origin, content.mid(i, length), attr);
-            i += length;
-        }
-    }
+    Assembler::compileFile(fileName, d()->m_memory);
 }
 
 void VM::step()
