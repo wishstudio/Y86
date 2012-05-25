@@ -20,12 +20,13 @@
 #include <QGridLayout>
 
 #include "StageViewer.h"
+#include "VM.h"
+#include "VMWorker.h"
 
-StageViewer::StageViewer(Wire *awire, QStringList wireList, QWidget *parent)
+StageViewer::StageViewer(int id, QWidget *parent)
     : QWidget(parent)
 {
-    wire = awire;
-    woi = wireList;
+    outWires = VM::worker(id)->outWires();
 
     QGridLayout *layout = new QGridLayout(this);
 
@@ -56,7 +57,7 @@ void StageViewer::updateDisplay(QStringList actionString)
     int j = 0;
     for (int i = 0; i < 20; i++)
         wireLabels[i]->setText("");
-    for (int i = 0; i < woi.size(); i++)
-        if (wire->state(woi.at(i)))
-            wireLabels[i]->setText(woi.at(i) + ": " + QString::number(wire->readWire(woi.at(i))));
+    foreach (QString wire, outWires)
+        if (VM::wireForRead()->state(wire))
+            wireLabels[j++]->setText(wire + ": " + QString::number(VM::wireForRead()->readWire(wire)));
 }

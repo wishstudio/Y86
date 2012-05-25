@@ -32,6 +32,7 @@ public:
     Wire();
     virtual ~Wire();
 
+    void clear();
     void clearState();
     bool state(const QString &_key);
     void copyFrom(Wire *src);

@@ -29,6 +29,12 @@ Wire::~Wire()
 {
 }
 
+void Wire::clear()
+{
+    memset(used, 0, sizeof used);
+    memset(value, 0, sizeof value);
+}
+
 void Wire::clearState()
 {
     memset(used, 0, sizeof used);

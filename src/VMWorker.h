@@ -35,6 +35,8 @@ public:
     VMWorker(int id, const QString &fileName);
     virtual ~VMWorker();
 
+    QStringList inWires() const { return m_inWires; }
+    QStringList outWires() const { return m_outWires; }
     void stopWorker();
     void addWorkerAction(const QString &action);
     QStringList workerActions() const;
@@ -44,7 +46,7 @@ private:
     QScriptEngine *engine;
     bool shouldStop;
     QStringList actions;
-    QStringList inWires, outWires;
+    QStringList m_inWires, m_outWires;
 };
 
 #endif

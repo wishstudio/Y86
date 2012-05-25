@@ -37,7 +37,8 @@ public:
     VM();
     virtual ~VM();
 
-    VM *self();
+    static void init();
+    static VM *self();
     static VMWorker *worker(int id);
     static QSemaphore *workerSemaphore();
     static QSemaphore *monitorSemaphore();

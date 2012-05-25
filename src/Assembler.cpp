@@ -21,6 +21,7 @@
 #include <QMap>
 #include <QFile>
 #include <QTextStream>
+#include <QDebug>
 
 #include "Assembler.h"
 
@@ -342,25 +343,28 @@ void Assembler::compileFile(const QString &fileName, Memory *memory)
     ::memory = memory;
     ::memory->clear();
     line_cnt = 1;
-    inFile.setFileName(fileName);
     symbolTable.clear();
     patchList.clear();
-    startEIP = -1;
+    ::startEIP = -1;
     /* default stack size: 16KBytes */
     stackSize = 16384;
+    inFile.setFileName(fileName);
+    inFile.open(QIODevice::ReadOnly);
+    inTextStream.setDevice(&inFile);
     getChar();
     getToken();
     compile();
+    inFile.close();
     /* allocate stack space */
     memory->setOrigin(memory->addr() + stackSize);
 }
 
-int Assembler::getStartEIP()
+int Assembler::startEIP()
 {
-    return startEIP;
+    return ::startEIP;
 }
 
-int Assembler::getStartESP()
+int Assembler::startESP()
 {
     return memory->addr();
 }

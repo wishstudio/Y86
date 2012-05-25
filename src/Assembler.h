@@ -41,8 +41,8 @@ class Assembler
 {
 public:
     static void compileFile(const QString &fileName, Memory *memory);
-    static int getStartEIP();
-    static int getStartESP();
+    static int startEIP();
+    static int startESP();
 };
 
 #endif

@@ -17,9 +17,35 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <QFileDialog>
+#include <QPushButton>
+#include <QVBoxLayout>
+
 #include "MainWindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent)
 {
+    QVBoxLayout *layout = new QVBoxLayout(this);
+
+    VM::init();
+
+    QPushButton *openFileButton = new QPushButton("Open assembly...");
+    connect(openFileButton, SIGNAL(clicked()), SLOT(openFile()));
+    layout->addWidget(openFileButton);
+
+    for (int i = 0; i < WORKERS_COUNT; i++)
+    {
+        stageViewer[i] = new StageViewer(i, this);
+        layout->addWidget(stageViewer[i]);
+    }
+
+    setLayout(layout);
+}
+
+void MainWindow::openFile()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, "Open assembly...", QString(), "All files (*.*)");
+    if (QFile::exists(fileName))
+        VM::loadObject(fileName);
 }

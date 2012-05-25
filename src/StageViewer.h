@@ -28,14 +28,13 @@
 class StageViewer: public QWidget
 {
 public:
-    StageViewer(Wire *awire, QStringList wireList, QWidget *parent = 0);
+    StageViewer(int id, QWidget *parent = 0);
     ~StageViewer();
 
     void updateDisplay(QStringList actionString);
 
 private:
-    Wire *wire;
-    QStringList woi; // Wires of interest
+    QStringList outWires;
 
     QLabel *actionLabels[4];
     QLabel *wireLabels[20];

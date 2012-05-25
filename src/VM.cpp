@@ -45,8 +45,6 @@ VM::VM()
     m_nextWire = new Wire();
     m_workerSemaphore = new QSemaphore();
     m_monitorSemaphore = new QSemaphore();
-    for (int i = 0; i < WORKERS_COUNT; i++)
-        stageWorkers[i] = new VMWorker(i, QString(":/components/Stage_%1.js").arg(stageNames[i]));
 }
 
 VM::~VM()
@@ -55,6 +53,12 @@ VM::~VM()
     delete m_reg;
     delete m_wire;
     delete m_nextWire;
+}
+
+void VM::init()
+{
+    for (int i = 0; i < WORKERS_COUNT; i++)
+        d()->stageWorkers[i] = new VMWorker(i, QString(":/components/Stage_%1.js").arg(stageNames[i]));
 }
 
 VM *VM::self()
@@ -106,6 +110,10 @@ void VM::reserveWire(const QString &wire)
 void VM::loadObject(const QString &fileName)
 {
     Assembler::compileFile(fileName, d()->m_memory);
+    d()->m_wire->clear();
+    d()->m_wire->writeWire("F_valP", Assembler::startEIP());
+    d()->m_reg->clear();
+    d()->m_reg->writeWire("esp", Assembler::startESP());
 }
 
 void VM::step()

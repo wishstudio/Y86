@@ -22,12 +22,21 @@
 
 #include <QWidget>
 
+#include "StageViewer.h"
+#include "VM.h"
+
 class MainWindow: public QWidget
 {
     Q_OBJECT
 
 public:
     MainWindow(QWidget *parent = 0);
+
+private slots:
+    void openFile();
+
+private:
+    StageViewer *stageViewer[WORKERS_COUNT];
 };
 
 #endif
