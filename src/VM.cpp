@@ -142,6 +142,7 @@ void VM::run()
         m_workerSemaphore->acquire(WORKERS_COUNT);
         m_wire->copyFrom(m_nextWire);
         m_nextWire->clearState();
+        emit updateDisplay();
         if (m_stop)
         {
             for (int i = 0; i < WORKERS_COUNT; i++)

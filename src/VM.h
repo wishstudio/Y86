@@ -56,6 +56,9 @@ public:
 
     void run();
 
+signals:
+    void updateDisplay();
+
 private:
     QSemaphore *m_workerSemaphore, *m_monitorSemaphore;
     Memory *m_memory;

@@ -167,6 +167,7 @@ void VMWorker::run()
     shouldStop = false;
     for (;;)
     {
+        actions.clear();
         engine->globalObject().property("cycle").call();
         VM::workerSemaphore()->release();
         VM::monitorSemaphore()->acquire();

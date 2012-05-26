@@ -47,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent)
     for (int i = 0; i < WORKERS_COUNT; i++)
     {
         stageViewer[i] = new StageViewer(i, this);
+        connect(VM::self(), SIGNAL(updateDisplay()), stageViewer[i], SLOT(updateDisplay()));
         layout->addWidget(stageViewer[i]);
     }
 

@@ -26,6 +26,7 @@
 StageViewer::StageViewer(int id, QWidget *parent)
     : QWidget(parent)
 {
+    this->id = id;
     outWires = VM::worker(id)->outWires();
 
     QGridLayout *layout = new QGridLayout(this);
@@ -51,10 +52,11 @@ StageViewer::~StageViewer()
 {
 }
 
-void StageViewer::updateDisplay(QStringList actionString)
+void StageViewer::updateDisplay()
 {
-    for (int i = 0; i < actionString.size(); i++)
-        actionLabels[i]->setText(actionString.at(i));
+    QStringList actions = VM::worker(id)->workerActions();
+    for (int i = 0; i < actions.size(); i++)
+        actionLabels[i]->setText(actions.at(i));
     int j = 0;
     for (int i = 0; i < 20; i++)
         wireLabels[i]->setText("");
