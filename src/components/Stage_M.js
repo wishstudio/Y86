@@ -19,14 +19,56 @@
 
 function inWires()
 {
-    return [];
+    return ["E_icode", "E_valP", "E_dstE", "E_valA", "E_valE"];
 }
 
 function outWires()
 {
-    return [];
+    return ["M_icode", "M_dstE", "M_valE", "M_valM"];
 }
 
 function cycle()
 {
+    var icode = readWire("E_icode");
+    var valP = readWire("E_valP");
+    var dstE = readWire("E_dstE");
+    var valA = readWire("E_valA");
+    var valE = readWire("E_valE");
+
+    switch (icode)
+    {
+    case OP_RMMOVL:
+        addAction("M4[valE] <- valA");
+        writeMemory(valE, valA);
+        break;
+
+    case OP_MRMOVL:
+        addAction("valM <- M4[valE]");
+        writeWire("M_valM", readMemory(valE));
+        break;
+
+    case OP_CALL:
+        addAction("M4[valE] <- valP");
+        writeMemory(valE, valP);
+        break;
+
+    case OP_RET:
+        addAction("valM <- M4[valA]");
+        writeWire("M_valM", readMemory(valA));
+        break;
+
+    case OP_PUSHL:
+        addAction("M4[valE] <- valA");
+        writeMemory(valE, valA);
+        break;
+
+    case OP_POPL:
+        addAction("valM <- M4[valA]");
+        writeWire("M_valM", readMemory(valA));
+        break;
+    }
+
+    writeWire("M_icode", icode);
+    writeWire("M_dstE", dstE);
+    writeWire("M_valE", valE);
 }

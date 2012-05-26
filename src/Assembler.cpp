@@ -27,8 +27,12 @@
 
 #define PAIR(ra, rb) (((ra) << 4) | rb)
 
+QString opNames[] = {"nop", "halt", "rrmovl", "irmovl", "rmmovl", "mrmovl", "opl", "jmp", "call", "ret", "pushl", "popl"};
+QString funOplNames[] = {"addl", "subl", "mull", "divl", "modl", "andl", "orl", "xorl"};
+QString funJmpNames[] = {"jmp", "jle", "jl", "je", "jne", "jge", "jg"};
+QString registerNames[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp"};
+
 static enum tokenType {tkEOF, tkComma, tkColon, tkDot, tkRegister, tkNumber, tkLabel, tkLP, tkRP} tt;
-static QString registerName[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp"};
 static QMap<QString, int> symbolTable;
 static QVector<QPair<QString, int> > patchList;
 static QFile inFile;
@@ -87,7 +91,7 @@ static void getToken()
         {
             tr = 8;
             for (int i = 0; i < 8; i++)
-                if (token == registerName[i])
+                if (token == registerNames[i])
                 {
                     tr = i;
                     break;
@@ -333,6 +337,44 @@ static void compile()
                 expectRegister();
                 memory->putChar(PAIR(OP_POPL, 0));
                 memory->putChar(PAIR(rA, REG_NONE));
+            }
+            else
+            {
+                int fun = -1;
+                for (int i = 0; i < FUN_OPL_CNT; i++)
+                    if (token == funOplNames[i])
+                    {
+                        fun = i;
+                        break;
+                    }
+                if (fun != -1)
+                {
+                    int rA = tr;
+                    expectRegister();
+                    expectComma();
+                    int rB = tr;
+                    expectRegister();
+                    memory->putChar(PAIR(OP_OPL, fun));
+                    memory->putChar(PAIR(rA, rB));
+                }
+                else
+                {
+                    for (int i = 0; i < FUN_JMP_CNT; i++)
+                        if (token == funJmpNames[i])
+                        {
+                            fun = i;
+                            break;
+                        }
+                    if (fun != -1)
+                    {
+                        QString label = token;
+                        expectLabel();
+                        memory->putChar(PAIR(OP_JMP, fun));
+                        putAddr(label);
+                    }
+                    else
+                        error("Unrecognized token \"" + token + "\".");
+                }
             }
         }
     }

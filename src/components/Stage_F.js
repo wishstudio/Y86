@@ -36,6 +36,7 @@ function cycle()
     writeWire("F_icode", icode);
     writeWire("F_ifun", ifun);
     addAction("icode:ifun <- M1[%eip]")
+
     switch (icode)
     {
     case OP_NOP:

@@ -110,19 +110,19 @@ VMWorker::VMWorker(int id, const QString &fileName)
     global.setProperty("readMemoryInt", engine->newFunction(readMemoryInt));
     global.setProperty("writeMemoryInt", engine->newFunction(writeMemoryInt));
     global.setProperty("addAction", engine->newFunction(addAction));
+    global.setProperty("debug", engine->newFunction(debug));
 
-    global.setProperty("OP_NOP", OP_NOP);
-    global.setProperty("OP_HALT", OP_HALT);
-    global.setProperty("OP_RRMOVL", OP_RRMOVL);
-    global.setProperty("OP_IRMOVL", OP_IRMOVL);
-    global.setProperty("OP_RMMOVL", OP_RMMOVL);
-    global.setProperty("OP_MRMOVL", OP_MRMOVL);
-    global.setProperty("OP_OP", OP_OP);
-    global.setProperty("OP_JMP", OP_JMP);
-    global.setProperty("OP_CALL", OP_CALL);
-    global.setProperty("OP_RET", OP_RET);
-    global.setProperty("OP_PUSHL", OP_PUSHL);
-    global.setProperty("OP_POPL", OP_POPL);
+    for (int i = 0; i < OP_CNT; i++)
+        global.setProperty("OP_" + opNames[i].toUpper(), i);
+
+    for (int i = 0; i < FUN_OPL_CNT; i++)
+        global.setProperty("FUN_" + funOplNames[i].toUpper(), i);
+
+    for (int i = 0; i < FUN_JMP_CNT; i++)
+        global.setProperty("FUN_" + funJmpNames[i].toUpper(), i);
+
+    for (int i = 0; i < REG_CNT; i++)
+        global.setProperty("REG_" + registerNames[i].toUpper(), i);
     engine->evaluate(program);
 
     QScriptValue in = global.property("inWires").call();
