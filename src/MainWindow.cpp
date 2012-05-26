@@ -19,6 +19,7 @@
 
 #include <QFileDialog>
 #include <QPushButton>
+#include <QHBoxLayout>
 #include <QVBoxLayout>
 
 #include "MainWindow.h"
@@ -26,13 +27,22 @@
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent)
 {
-    QVBoxLayout *layout = new QVBoxLayout(this);
-
     VM::init();
 
-    QPushButton *openFileButton = new QPushButton("Open assembly...");
+    QPushButton *openFileButton = new QPushButton("Open assembly...", this);
     connect(openFileButton, SIGNAL(clicked()), SLOT(openFile()));
-    layout->addWidget(openFileButton);
+    QPushButton *startButton = new QPushButton("Start", this);
+    connect(startButton, SIGNAL(clicked()), SLOT(start()));
+    QPushButton *stepButton = new QPushButton("Step", this);
+    connect(stepButton, SIGNAL(clicked()), SLOT(step()));
+    QHBoxLayout *toolsLayout = new QHBoxLayout();
+    toolsLayout->addWidget(openFileButton);
+    toolsLayout->addWidget(startButton);
+    toolsLayout->addWidget(stepButton);
+
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->setSpacing(0);
+    layout->addLayout(toolsLayout);
 
     for (int i = 0; i < WORKERS_COUNT; i++)
     {
@@ -48,4 +58,13 @@ void MainWindow::openFile()
     QString fileName = QFileDialog::getOpenFileName(this, "Open assembly...", QString(), "All files (*.*)");
     if (QFile::exists(fileName))
         VM::loadObject(fileName);
+}
+
+void MainWindow::start()
+{
+}
+
+void MainWindow::step()
+{
+    VM::step();
 }

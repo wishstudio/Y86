@@ -25,6 +25,14 @@
 #include "VM.h"
 #include "VMWorker.h"
 
+static QScriptValue debug(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    qDebug("%s\n", qPrintable(context->argument(0).toString()));
+    return engine->undefinedValue();
+}
+
 static QScriptValue readWire(QScriptContext *context, QScriptEngine *engine)
 {
     if (context->argumentCount() != 1)
@@ -44,14 +52,14 @@ static QScriptValue readRegister(QScriptContext *context, QScriptEngine *engine)
 {
     if (context->argumentCount() != 1)
         return engine->undefinedValue();
-    return VM::reg()->readWire(context->argument(0).toString());
+    return VM::reg()->readRegister(context->argument(0).toInt32());
 }
 
 static QScriptValue writeRegister(QScriptContext *context, QScriptEngine *engine)
 {
     if (context->argumentCount() != 2)
         return engine->undefinedValue();
-    VM::reg()->writeWire(context->argument(0).toString(), context->argument(1).toInt32());
+    VM::reg()->writeRegister(context->argument(0).toInt32(), context->argument(1).toInt32());
     return engine->undefinedValue();
 }
 

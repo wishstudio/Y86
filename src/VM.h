@@ -23,6 +23,7 @@
 #include <QThread>
 #include <QSemaphore>
 
+#include "Register.h"
 #include "VMWorker.h"
 #include "Memory.h"
 #include "Wire.h"
@@ -43,21 +44,24 @@ public:
     static QSemaphore *workerSemaphore();
     static QSemaphore *monitorSemaphore();
     static Memory *memory();
-    static Wire *reg();
+    static Register *reg();
     static Wire *wireForRead();
     static Wire *wireForWrite();
     static void reserveWire(const QString &wire);
 
     static void loadObject(const QString &fileName);
     static void step();
-    static void startRunning();
+    static void startVM();
+    static void stopVM();
 
     void run();
 
 private:
     QSemaphore *m_workerSemaphore, *m_monitorSemaphore;
     Memory *m_memory;
-    Wire *m_reg, *m_wire, *m_nextWire;
+    Register *m_reg;
+    Wire *m_wire, *m_nextWire;
+    bool m_stop;
     VMWorker *stageWorkers[WORKERS_COUNT];
 };
 

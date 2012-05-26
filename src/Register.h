@@ -17,42 +17,19 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef AS_H
-#define AS_H
-
-#define OP_NOP     0x00
-#define OP_HALT    0x01
-#define OP_RRMOVL  0x02
-#define OP_IRMOVL  0x03
-#define OP_RMMOVL  0x04
-#define OP_MRMOVL  0x05
-#define OP_OP      0x06
-#define OP_JMP     0x07
-#define OP_CALL    0x08
-#define OP_RET     0x09
-#define OP_PUSHL   0x0A
-#define OP_POPL    0x0B
-
-#define REG_EAX    0x00
-#define REG_ECX    0x01
-#define REG_EDX    0x02
-#define REG_EBX    0x03
-#define REG_ESI    0x04
-#define REG_EDI    0x05
-#define REG_ESP    0x06
-#define REG_EBP    0x07
-#define REG_NONE   0x08
+#ifndef REGISTER_H
+#define REGISTER_H
 
 #include <Qt>
 
-#include "Memory.h"
-
-class Assembler
+class Register
 {
 public:
-    static void compileFile(const QString &fileName, Memory *memory);
-    static int startEIP();
-    static int startESP();
+    int readRegister(int id) const;
+    void writeRegister(int id, int value);
+
+private:
+    int m_reg[8];
 };
 
 #endif

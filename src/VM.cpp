@@ -40,7 +40,7 @@ static int readInt(const QByteArray &bytes, int addr)
 VM::VM()
 {
     m_memory = new Memory();
-    m_reg = new Wire();
+    m_reg = new Register();
     m_wire = new Wire();
     m_nextWire = new Wire();
     m_workerSemaphore = new QSemaphore();
@@ -86,7 +86,7 @@ Memory *VM::memory()
     return d()->m_memory;
 }
 
-Wire *VM::reg()
+Register *VM::reg()
 {
     return d()->m_reg;
 }
@@ -112,16 +112,24 @@ void VM::loadObject(const QString &fileName)
     Assembler::compileFile(fileName, d()->m_memory);
     d()->m_wire->clear();
     d()->m_wire->writeWire("F_valP", Assembler::startEIP());
-    d()->m_reg->clear();
-    d()->m_reg->writeWire("esp", Assembler::startESP());
+    d()->m_reg->writeRegister(REG_ESP, Assembler::startESP());
 }
 
 void VM::step()
 {
+    d()->m_stop = true;
+    d()->start();
 }
 
-void VM::startRunning()
+void VM::startVM()
 {
+    d()->m_stop = false;
+    d()->start();
+}
+
+void VM::stopVM()
+{
+    d()->m_stop = true;
 }
 
 void VM::run()
@@ -134,6 +142,13 @@ void VM::run()
         m_workerSemaphore->acquire(WORKERS_COUNT);
         m_wire->copyFrom(m_nextWire);
         m_nextWire->clearState();
+        if (m_stop)
+        {
+            for (int i = 0; i < WORKERS_COUNT; i++)
+                stageWorkers[i]->stopWorker();
+            m_monitorSemaphore->release(WORKERS_COUNT);
+            break;
+        }
         m_monitorSemaphore->release(WORKERS_COUNT);
     }
 }

@@ -265,7 +265,7 @@ static void compile()
                 int rB = tr;
                 expectRegister();
                 memory->putChar(PAIR(OP_IRMOVL, 0));
-                memory->putChar(PAIR(8, rB));
+                memory->putChar(PAIR(REG_NONE, rB));
                 memory->put(num);
             }
             else if (label == "rmmovl")
@@ -325,14 +325,14 @@ static void compile()
                 int rA = tr;
                 expectRegister();
                 memory->putChar(PAIR(OP_PUSHL, 0));
-                memory->putChar(PAIR(rA, 8));
+                memory->putChar(PAIR(rA, REG_NONE));
             }
             else if (label == "popl")
             {
                 int rA = tr;
                 expectRegister();
                 memory->putChar(PAIR(OP_POPL, 0));
-                memory->putChar(PAIR(rA, 8));
+                memory->putChar(PAIR(rA, REG_NONE));
             }
         }
     }

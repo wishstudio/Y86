@@ -29,6 +29,7 @@ StageViewer::StageViewer(int id, QWidget *parent)
     outWires = VM::worker(id)->outWires();
 
     QGridLayout *layout = new QGridLayout(this);
+    layout->setSpacing(0);
 
     layout->addWidget(new QLabel("Actions:", this), 0, 0);
     for (int i = 0; i < 4; i++)

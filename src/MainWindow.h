@@ -34,6 +34,8 @@ public:
 
 private slots:
     void openFile();
+    void start();
+    void step();
 
 private:
     StageViewer *stageViewer[WORKERS_COUNT];
