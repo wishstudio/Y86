@@ -25,6 +25,9 @@
 
 #include "Wire.h"
 
+#define ROW_COUNT        4
+#define WIRE_COL_COUNT   3
+
 class StageViewer: public QWidget
 {
     Q_OBJECT
@@ -40,8 +43,8 @@ private:
     QStringList outWires;
     int id;
 
-    QLabel *actionLabels[4];
-    QLabel *wireLabels[20];
+    QLabel *actionLabels[ROW_COUNT];
+    QLabel *wireLabels[ROW_COUNT * WIRE_COL_COUNT];
 };
 
 #endif
