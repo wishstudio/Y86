@@ -22,7 +22,7 @@
 
 // A thread-safe class for holding pipeline registers
 
-#include <QString>
+#include <Qt>
 
 #define HASH_SIZE 4096
 

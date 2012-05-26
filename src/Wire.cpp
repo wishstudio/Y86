@@ -46,8 +46,8 @@ void Wire::copyFrom(Wire *src)
     {
         key[i] = src->key[i];
         value[i] = src->value[i];
+        used[i] = src->used[i];
     }
-    memset(used, 0, sizeof used);
 }
 
 bool Wire::state(const QString &_key)
@@ -81,4 +81,5 @@ void Wire::writeWire(const QString &_key, int _value)
     while (key[h] != _key)
         h = (h + 1) % HASH_SIZE;
     value[h] = _value;
+    used[h] = true;
 }
