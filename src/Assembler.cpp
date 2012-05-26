@@ -30,7 +30,7 @@
 QString opNames[] = {"nop", "halt", "rrmovl", "irmovl", "rmmovl", "mrmovl", "opl", "jmp", "call", "ret", "pushl", "popl"};
 QString funOplNames[] = {"addl", "subl", "mull", "divl", "modl", "andl", "orl", "xorl"};
 QString funJmpNames[] = {"jmp", "jle", "jl", "je", "jne", "jge", "jg"};
-QString registerNames[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp"};
+QString registerNames[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp", "none"};
 
 static enum tokenType {tkEOF, tkComma, tkColon, tkDot, tkRegister, tkNumber, tkLabel, tkLP, tkRP} tt;
 static QMap<QString, int> symbolTable;

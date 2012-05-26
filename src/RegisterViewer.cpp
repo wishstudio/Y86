@@ -17,30 +17,27 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#include <QVBoxLayout>
 
-#include <QWidget>
-
+#include "Register.h"
 #include "RegisterViewer.h"
-#include "StageViewer.h"
 #include "VM.h"
 
-class MainWindow: public QWidget
+RegisterViewer::RegisterViewer(QWidget *parent)
+    : QWidget(parent)
 {
-    Q_OBJECT
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    for (int i = 0; i < REG_NONE; i++)
+    {
+        registerLabels[i] = new QLabel(QString("%%1: ").arg(registerNames[i]), this);
+        layout->addWidget(registerLabels[i]);
+    }
 
-public:
-    MainWindow(QWidget *parent = 0);
+    setLayout(layout);
+}
 
-private slots:
-    void openFile();
-    void start();
-    void step();
-
-private:
-    RegisterViewer *registerViewer;
-    StageViewer *stageViewer[WORKERS_COUNT];
-};
-
-#endif
+void RegisterViewer::updateDisplay()
+{
+    for (int i = 0; i < REG_NONE; i++)
+        registerLabels[i]->setText(QString("%%1: %2").arg(registerNames[i]).arg(VM::reg()->readRegister(i)));
+}

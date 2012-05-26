@@ -22,6 +22,8 @@
 
 #include <Qt>
 
+#include "Memory.h"
+
 #define OP_NOP      0x00
 #define OP_HALT     0x01
 #define OP_RRMOVL   0x02
@@ -73,10 +75,6 @@ extern QString funJmpNames[];
 #define REG_CNT     0x09
 
 extern QString registerNames[];
-
-#include <Qt>
-
-#include "Memory.h"
 
 class Assembler
 {

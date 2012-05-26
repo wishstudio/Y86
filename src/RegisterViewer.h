@@ -17,30 +17,26 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef REGISTERVIEWER_H
+#define REGISTERVIEWER_H
 
 #include <QWidget>
+#include <QLabel>
 
-#include "RegisterViewer.h"
-#include "StageViewer.h"
-#include "VM.h"
+#include "Assembler.h"
 
-class MainWindow: public QWidget
+class RegisterViewer: public QWidget
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = 0);
+    RegisterViewer(QWidget *parent = 0);
 
-private slots:
-    void openFile();
-    void start();
-    void step();
+public slots:
+    void updateDisplay();
 
 private:
-    RegisterViewer *registerViewer;
-    StageViewer *stageViewer[WORKERS_COUNT];
+    QLabel *registerLabels[REG_NONE];
 };
 
 #endif

@@ -21,6 +21,7 @@
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QGridLayout>
 
 #include "MainWindow.h"
 
@@ -40,16 +41,19 @@ MainWindow::MainWindow(QWidget *parent)
     toolsLayout->addWidget(startButton);
     toolsLayout->addWidget(stepButton);
 
-    QVBoxLayout *layout = new QVBoxLayout(this);
+    QGridLayout *layout = new QGridLayout(this);
     layout->setSpacing(0);
-    layout->addLayout(toolsLayout);
+    layout->addLayout(toolsLayout, 0, 0);
 
     for (int i = 0; i < WORKERS_COUNT; i++)
     {
         stageViewer[i] = new StageViewer(i, this);
         connect(VM::self(), SIGNAL(updateDisplay()), stageViewer[i], SLOT(updateDisplay()));
-        layout->addWidget(stageViewer[i]);
+        layout->addWidget(stageViewer[i], i + 1, 0);
     }
+    registerViewer = new RegisterViewer(this);
+    connect(VM::self(), SIGNAL(updateDisplay()), registerViewer, SLOT(updateDisplay()));
+    layout->addWidget(registerViewer, 1, 1, 2, 1);
 
     setLayout(layout);
 }
