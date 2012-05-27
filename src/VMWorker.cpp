@@ -44,12 +44,19 @@ static QScriptValue readForwardingWire(QScriptContext *context, QScriptEngine *e
 {
     if (context->argumentCount() != 1)
         return engine->undefinedValue();
-    return VM::wireForWrite()->readForwardingWire(context->argument(0).toString());
+    /* If we are doing fake running, no actual data is written to the wire,
+       so the readForwardingWire will deadly block.
+       To workaround we just return a fake 0 value, as this value is
+       unmeaningful in fake mode */
+    if (VM::isFakeRun())
+        return 0;
+    else
+        return VM::wireForWrite()->readForwardingWire(context->argument(0).toString());
 }
 
 static QScriptValue writeWire(QScriptContext *context, QScriptEngine *engine)
 {
-    if (context->argumentCount() != 2)
+    if (context->argumentCount() != 2 || VM::isFakeRun())
         return engine->undefinedValue();
     VM::wireForWrite()->writeWire(context->argument(0).toString(), context->argument(1).toInt32());
     return engine->undefinedValue();
@@ -64,7 +71,7 @@ static QScriptValue readRegister(QScriptContext *context, QScriptEngine *engine)
 
 static QScriptValue writeRegister(QScriptContext *context, QScriptEngine *engine)
 {
-    if (context->argumentCount() != 2)
+    if (context->argumentCount() != 2 || VM::isFakeRun())
         return engine->undefinedValue();
     VM::reg()->writeRegister(context->argument(0).toInt32(), context->argument(1).toInt32());
     return engine->undefinedValue();
@@ -86,7 +93,7 @@ static QScriptValue readMemoryInt(QScriptContext *context, QScriptEngine *engine
 
 static QScriptValue writeMemoryInt(QScriptContext *context, QScriptEngine *engine)
 {
-    if (context->argumentCount() != 2)
+    if (context->argumentCount() != 2 || VM::isFakeRun())
         return engine->undefinedValue();
     return VM::memory()->writeInt(context->argument(0).toInt32(), context->argument(1).toInt32());
 }
@@ -101,6 +108,8 @@ static QScriptValue addAction(QScriptContext *context, QScriptEngine *engine)
 
 VMWorker::VMWorker(int id, const QString &fileName)
 {
+    this->id = id;
+
     QFile file(fileName);
     file.open(QIODevice::ReadOnly);
     QScriptProgram program = QString(file.readAll());
@@ -160,14 +169,25 @@ void VMWorker::stopWorker()
     shouldStop = true;
 }
 
+void VMWorker::clearWorkerActions()
+{
+    actions.clear();
+}
+
 void VMWorker::addWorkerAction(const QString &action)
 {
     actions.push_back(action);
 }
 
-QStringList VMWorker::workerActions() const
+QStringList VMWorker::workerActions()
 {
     return actions;
+}
+
+void VMWorker::cycle()
+{
+    actions.clear();
+    engine->globalObject().property("cycle").call();
 }
 
 void VMWorker::run()
@@ -175,10 +195,9 @@ void VMWorker::run()
     shouldStop = false;
     for (;;)
     {
-        actions.clear();
-        engine->globalObject().property("cycle").call();
-        VM::workerSemaphore()->release();
-        VM::monitorSemaphore()->acquire();
+        cycle();
+        VM::monitorSemaphore()->release();
+        VM::workerSemaphore(id)->acquire();
         if (shouldStop)
             break;
     }

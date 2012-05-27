@@ -56,6 +56,8 @@ StageViewer::~StageViewer()
 void StageViewer::updateDisplay()
 {
     QStringList actions = VM::worker(id)->workerActions();
+    for (int i = 0; i < ROW_COUNT; i++)
+        actionLabels[i]->setText("");
     for (int i = 0; i < actions.size(); i++)
         actionLabels[i]->setText(actions.at(i));
     for (int i = 0; i < ROW_COUNT; i++)

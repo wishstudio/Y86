@@ -43,7 +43,8 @@ VM::VM()
     m_reg = new Register();
     m_wire = new Wire();
     m_nextWire = new Wire();
-    m_workerSemaphore = new QSemaphore();
+    for (int i = 0; i < WORKERS_COUNT; i++)
+        m_workerSemaphore[i] = new QSemaphore();
     m_monitorSemaphore = new QSemaphore();
 }
 
@@ -53,6 +54,9 @@ VM::~VM()
     delete m_reg;
     delete m_wire;
     delete m_nextWire;
+    for (int i = 0; i < WORKERS_COUNT; i++)
+        delete m_workerSemaphore[i];
+    delete m_monitorSemaphore;
 }
 
 void VM::init()
@@ -71,9 +75,9 @@ VMWorker *VM::worker(int id)
     return d()->stageWorkers[id];
 }
 
-QSemaphore *VM::workerSemaphore()
+QSemaphore *VM::workerSemaphore(int id)
 {
-    return d()->m_workerSemaphore;
+    return d()->m_workerSemaphore[id];
 }
 
 QSemaphore *VM::monitorSemaphore()
@@ -101,6 +105,11 @@ Wire *VM::wireForWrite()
     return d()->m_nextWire;
 }
 
+bool VM::isFakeRun()
+{
+    return d()->m_fakeRun;
+}
+
 void VM::reserveWire(const QString &wire)
 {
     d()->m_wire->reserve(wire);
@@ -121,11 +130,18 @@ void VM::loadObject(const QString &fileName)
     d()->m_wire->writeWire("E_dstE", REG_NONE);
     d()->m_wire->writeWire("M_dstE", REG_NONE);
     d()->m_wire->writeWire("W_dstE", REG_NONE);
+
+    for (int i = 0; i < WORKERS_COUNT; i++)
+        d()->stageWorkers[i]->clearWorkerActions();
+    /* do a fake run on stage 0 to get initial actions */
+    d()->m_fakeRun = true;
+    d()->stageWorkers[0]->cycle();
     emit d()->updateDisplay();
 }
 
 void VM::step()
 {
+    while (d()->isRunning());
     d()->m_stop = true;
     d()->start();
 }
@@ -144,21 +160,34 @@ void VM::stopVM()
 void VM::run()
 {
     m_nextWire->clearState();
+    m_fakeRun = false;
     for (int i = 0; i < WORKERS_COUNT; i++)
         stageWorkers[i]->start();
     for (;;)
     {
-        m_workerSemaphore->acquire(WORKERS_COUNT);
+        m_monitorSemaphore->acquire(WORKERS_COUNT);
         m_wire->copyFrom(m_nextWire);
         m_nextWire->clearState();
+        /* do a fake run to get stage actions */
+        m_fakeRun = true;
+        for (int i = 0; i < WORKERS_COUNT; i++)
+            m_workerSemaphore[i]->release();
+        m_monitorSemaphore->acquire(WORKERS_COUNT);
         emit updateDisplay();
+        m_fakeRun = false;
         if (m_stop)
         {
             for (int i = 0; i < WORKERS_COUNT; i++)
+            {
                 stageWorkers[i]->stopWorker();
-            m_monitorSemaphore->release(WORKERS_COUNT);
+                m_workerSemaphore[i]->release();
+                /* wait for stage worker to stop */
+                while (!stageWorkers[i]->isRunning())
+                    /* spin lock */;
+            }
             break;
         }
-        m_monitorSemaphore->release(WORKERS_COUNT);
+        for (int i = 0; i < WORKERS_COUNT; i++)
+            m_workerSemaphore[i]->release();
     }
 }

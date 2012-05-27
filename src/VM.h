@@ -41,12 +41,13 @@ public:
     static void init();
     static VM *self();
     static VMWorker *worker(int id);
-    static QSemaphore *workerSemaphore();
+    static QSemaphore *workerSemaphore(int id);
     static QSemaphore *monitorSemaphore();
     static Memory *memory();
     static Register *reg();
     static Wire *wireForRead();
     static Wire *wireForWrite();
+    static bool isFakeRun();
     static void reserveWire(const QString &wire);
 
     static void loadObject(const QString &fileName);
@@ -60,11 +61,12 @@ signals:
     void updateDisplay();
 
 private:
-    QSemaphore *m_workerSemaphore, *m_monitorSemaphore;
+    QSemaphore *m_workerSemaphore[WORKERS_COUNT];
+    QSemaphore *m_monitorSemaphore;
     Memory *m_memory;
     Register *m_reg;
     Wire *m_wire, *m_nextWire;
-    bool m_stop;
+    bool m_stop, m_fakeRun;
     VMWorker *stageWorkers[WORKERS_COUNT];
 };
 

@@ -38,11 +38,14 @@ public:
     QStringList inWires() const { return m_inWires; }
     QStringList outWires() const { return m_outWires; }
     void stopWorker();
+    void clearWorkerActions();
     void addWorkerAction(const QString &action);
-    QStringList workerActions() const;
+    QStringList workerActions();
+    void cycle();
     void run();
 
 private:
+    int id;
     QScriptEngine *engine;
     bool shouldStop;
     QStringList actions;
