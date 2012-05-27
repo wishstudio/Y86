@@ -96,7 +96,7 @@ char Memory::readChar(int addr) const
 
 int Memory::readInt(int addr) const
 {
-    return *(int *) mem[addr];
+    return *(int *) (mem.data() + addr);
 }
 
 bool Memory::writeInt(int addr, int value)
@@ -104,6 +104,6 @@ bool Memory::writeInt(int addr, int value)
     for (int i = 0; i < 4; i++)
         if (!(attrMask[(i + addr) / 32] & (1 << ((i + addr) % 32))))
             return false;
-    *(int *) &mem[addr] = value;
+    *(int *) (mem.data() + addr) = value;
     return true;
 }

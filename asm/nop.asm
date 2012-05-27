@@ -1,3 +1,4 @@
+	; no-op
 	.text
 	nop
 	nop

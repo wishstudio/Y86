@@ -32,7 +32,7 @@ QString funOplNames[] = {"addl", "subl", "mull", "divl", "modl", "andl", "orl", 
 QString funJmpNames[] = {"jmp", "jle", "jl", "je", "jne", "jge", "jg"};
 QString registerNames[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp", "none"};
 
-static enum tokenType {tkEOF, tkComma, tkColon, tkDot, tkRegister, tkNumber, tkLabel, tkLP, tkRP} tt;
+static enum tokenType {tkEOF, tkComma, tkColon, tkDot, tkRegister, tkMemory, tkNumber, tkLabel, tkLP, tkRP} tt;
 static QMap<QString, int> symbolTable;
 static QVector<QPair<QString, int> > patchList;
 static QFile inFile;
@@ -56,7 +56,10 @@ static void getChar()
     if (inTextStream.atEnd())
         ch = -1;
     else
+    {
         inTextStream >> ch;
+        ch = tolower(ch);
+    }
 }
 
 static void getToken()
@@ -69,6 +72,13 @@ static void getToken()
     }
     if (ch == -1)
         tt = tkEOF;
+    else if (ch == ';') /* comments */
+    {
+        getChar();
+        while (ch != -1 && ch != '\n')
+            getChar();
+        getToken();
+    }
     else if (ch == '%' || isalpha(ch) || ch == '_')
     {
         if (ch == '%')
@@ -79,12 +89,12 @@ static void getToken()
         else
         {
             tt = tkLabel;
-            token = (char) tolower(ch);
+            token = ch;
         }
         getChar();
         while (isalpha(ch) || isdigit(ch) || ch == '_')
         {
-            token = token + (char) tolower(ch);
+            token = token + ch;
             getChar();
         }
         if (tt == tkRegister)
@@ -104,15 +114,18 @@ static void getToken()
     {
         if (ch == '$')
         {
+            tt = tkNumber;
             getChar();
             if (!isdigit(ch))
                 error("Number expected after $.");
         }
+        else
+            tt = tkMemory;
         int base = 10;
         if (ch == '0')
         {
             getChar();
-            if (ch == 'x')
+            if (ch == 'x' || ch == 'X')
             {
                 getChar();
                 if (!isdigit(ch))
@@ -120,29 +133,28 @@ static void getToken()
                 base = 16;
             }
             else if (isdigit(ch))
-            {
                 base = 8;
-            }
             else
                 error("Number expected after 0.");
         }
-        token = ch;
-        getChar();
-        while (isdigit(ch) || (tolower(ch) >= 'a' && tolower(ch) <= 'f'))
+        token = "";
+        while ((ch >= '0' && ch <= '7') || (base > 8 && ch >= '0' && ch <= '9') || (base > 10 && ch >= 'a' && ch <= 'f'))
         {
             token = token + ch;
             getChar();
         }
-        // TODO
+        tn = token.toInt(NULL, base);
     }
-    switch (ch)
-    {
-    case '.': tt = tkDot; getChar(); break;
-    case ',': tt = tkComma; getChar(); break;
-    case ':': tt = tkColon; getChar(); break;
-    case '(': tt = tkLP; getChar(); break;
-    case ')': tt = tkRP; getChar(); break;
-    }
+    else
+        switch (ch)
+        {
+        case '.': tt = tkDot; getChar(); break;
+        case ',': tt = tkComma; getChar(); break;
+        case ':': tt = tkColon; getChar(); break;
+        case '(': tt = tkLP; getChar(); break;
+        case ')': tt = tkRP; getChar(); break;
+        default: error(QString("Unrecognized character '%1'.").arg(ch));
+        }
 }
 
 static void expectRegister()
@@ -207,24 +219,16 @@ static void compile()
                 if (startEIP == -1)
                     startEIP = memory->addr();
                 memory->setAttr(false);
-                getToken();
             }
             else if (label == "stacksize")
             {
-                getToken();
                 stackSize = tn;
                 expectNumber();
             }
             else if (label == "rodata")
-            {
                 memory->setAttr(false);
-                getToken();
-            }
             else if (label == "data")
-            {
                 memory->setAttr(true);
-                getToken();
-            }
             else if (label == "origin")
             {
                 int origin = tn;

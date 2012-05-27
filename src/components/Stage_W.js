@@ -19,7 +19,7 @@
 
 function inWires()
 {
-    return ["M_icode", "M_dstE", "M_valE", "M_valM"];
+    return ["W_icode", "W_dstE", "W_valE", "W_valM"];
 }
 
 function outWires()
@@ -29,10 +29,10 @@ function outWires()
 
 function cycle()
 {
-    var icode = readWire("M_icode");
-    var dstE = readWire("M_dstE");
-    var valE = readWire("M_valE");
-    var valM = readWire("M_valM");
+    var icode = readWire("W_icode");
+    var dstE = readWire("W_dstE");
+    var valE = readWire("W_valE");
+    var valM = readWire("W_valM");
 
     switch (icode)
     {
@@ -47,7 +47,7 @@ function cycle()
 
     case OP_MRMOVL:
         addAction("R[dstE] <- valM");
-        writeRegisteR(dstE, valM);
+        writeRegister(dstE, valM);
         break;
 
     case OP_POPL:

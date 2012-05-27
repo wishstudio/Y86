@@ -19,24 +19,36 @@
 
 function inWires()
 {
-    return ["F_icode", "F_ifun", "F_valP", "F_rA", "F_rB", "F_valC"];
+    return ["D_icode", "D_ifun", "D_valP", "D_rA", "D_rB", "D_valC", "E_dstE", "E_valE", "M_dstE", "M_valE", "W_dstE", "W_valE"];
 }
 
 function outWires()
 {
-    return ["D_icode", "D_ifun", "D_valP", "D_valA", "D_valB", "D_valC", "D_dstE"];
+    return ["E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE"];
+}
+
+function fetchRegisterWithForwarding(reg)
+{
+    if (reg == readWire("E_dstE"))
+        return readWire("E_valE");
+    if (reg == readWire("M_dstE"))
+        return readWire("M_valE");
+    if (reg == readWire("W_dstE"))
+        return readWire("W_valE");
+    return readRegister(reg);
 }
 
 function cycle()
 {
-    var icode = readWire("F_icode");
-    var ifun = readWire("F_ifun");
-    var valP = readWire("F_valP");
-    var srcA = readWire("F_rA");
-    var srcB = readWire("F_rB");
-    var valC = readWire("F_valC");
+    var icode = readWire("D_icode");
+    var ifun = readWire("D_ifun");
+    var valP = readWire("D_valP");
+    var rA = readWire("D_rA");
+    var rB = readWire("D_rB");
+    var valC = readWire("D_valC");
 
     /* calculate valA and valB */
+    var srcA = REG_NONE, srcB = REG_NONE;
     switch (icode)
     {
     case OP_RRMOVL:
@@ -45,23 +57,32 @@ function cycle()
     case OP_OPL:
         addAction("valA <- R[rA]");
         addAction("valB <- R[rB]");
-        writeWire("D_valA", readRegister(srcA));
-        writeWire("D_valB", readRegister(srcB));
+        srcA = rA;
+        srcB = rB;
         break;
 
     case OP_PUSHL:
         addAction("valA <- R[rA]");
         addAction("valB <- R[%esp]");
-        writeWire("D_valA", readRegister(srcA));
-        writeWire("D_valB", readRegister(REG_ESP));
+        srcA = rA;
+        srcB = REG_ESP;
         break;
 
     case OP_POPL:
         addAction("valA <- R[%esp]");
         addAction("valB <- R[%esp]");
-        writeWire("D_valA", readRegister(REG_ESP));
-        writeWire("D_valB", readRegister(REG_ESP));
+        srcA = srcB = REG_ESP;
         break;
+    }
+    if (srcA != REG_NONE)
+    {
+        var valA = fetchRegisterWithForwarding(srcA);
+        writeWire("E_valA", valA);
+    }
+    if (srcB != REG_NONE)
+    {
+        var valB = fetchRegisterWithForwarding(srcB);
+        writeWire("E_valB", valB);
     }
 
     /* calculate dstE */
@@ -69,18 +90,22 @@ function cycle()
     {
     case OP_MRMOVL:
     case OP_POPL:
-        writeWire("D_dstE", srcA);
+        writeWire("E_dstE", rA);
         break;
 
     case OP_RRMOVL:
     case OP_IRMOVL:
     case OP_OPL:
-        writeWire("D_dstE", srcB);
+        writeWire("E_dstE", rB);
+        break;
+
+    default:
+        writeWire("E_dstE", REG_NONE);
         break;
     }
 
-    writeWire("D_icode", icode);
-    writeWire("D_ifun", ifun);
-    writeWire("D_valP", valP);
-    writeWire("D_valC", valC);
+    writeWire("E_icode", icode);
+    writeWire("E_ifun", ifun);
+    writeWire("E_valP", valP);
+    writeWire("E_valC", valC);
 }

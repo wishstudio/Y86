@@ -40,7 +40,7 @@ public slots:
     void updateDisplay();
 
 private:
-    QStringList outWires;
+    QStringList inWires;
     int id;
 
     QLabel *actionLabels[ROW_COUNT];

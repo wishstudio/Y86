@@ -25,6 +25,7 @@
 class Register
 {
 public:
+    void clear();
     int readRegister(int id) const;
     void writeRegister(int id, int value);
 

@@ -19,6 +19,11 @@
 
 #include "Register.h"
 
+void Register::clear()
+{
+    memset(m_reg, 0, sizeof m_reg);
+}
+
 int Register::readRegister(int id) const
 {
     return m_reg[id];

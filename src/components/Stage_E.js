@@ -19,22 +19,23 @@
 
 function inWires()
 {
-    return ["D_icode", "D_ifun", "D_valP", "D_valA", "D_valB", "D_dstE"];
+    return ["E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE"];
 }
 
 function outWires()
 {
-    return ["E_icode", "E_dstE", "E_valP", "E_valA", "E_valE"];
+    return ["M_icode", "M_dstE", "M_valP", "M_valA", "M_valE"];
 }
 
 function cycle()
 {
-    var icode = readWire("D_icode");
-    var ifun = readWire("D_ifun");
-    var valP = readWire("D_valP");
-    var valA = readWire("D_valA");
-    var valB = readWire("D_valB");
-    var dstE = readWirE("D_dstE");
+    var icode = readWire("E_icode");
+    var ifun = readWire("E_ifun");
+    var valP = readWire("E_valP");
+    var valA = readWire("E_valA");
+    var valB = readWire("E_valB");
+    var valC = readWire("E_valC");
+    var dstE = readWire("E_dstE");
 
     /* calculate valE */
     var valE;
@@ -96,8 +97,8 @@ function cycle()
         break;
     }
 
-    writeWire("E_icode", icode);
-    writeWire("E_valP", valP);
-    writeWire("E_dstE", dstE);
-    writeWire("E_valE", valE);
+    writeWire("M_icode", icode);
+    writeWire("M_valP", valP);
+    writeWire("M_dstE", dstE);
+    writeWire("M_valE", valE);
 }

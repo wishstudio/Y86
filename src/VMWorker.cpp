@@ -131,11 +131,11 @@ VMWorker::VMWorker(int id, const QString &fileName)
         m_inWires.push_back(in.property(i).toString());
 
     QScriptValue out = global.property("outWires").call();
-    int out_cnt = in.property("length").toInt32();
+    int out_cnt = out.property("length").toInt32();
     for (int i = 0; i < out_cnt; i++)
         m_outWires.push_back(out.property(i).toString());
 
-    foreach (const QString &wire, m_inWires)
+    foreach (QString wire, m_inWires)
         VM::reserveWire(wire);
 
     foreach (QString wire, m_outWires)

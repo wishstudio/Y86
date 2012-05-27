@@ -19,22 +19,22 @@
 
 function inWires()
 {
-    return ["F_valP"];
+    return ["D_valP"];
 }
 
 function outWires()
 {
-    return ["F_icode", "F_ifun", "F_rA", "F_rB", "F_valC", "F_valP"];
+    return ["D_icode", "D_ifun", "D_rA", "D_rB", "D_valC", "D_valP"];
 }
 
 function cycle()
 {
-    var eip = readWire("F_valP");
+    var eip = readWire("D_valP"); // TODO: it's better to use F_predP or similar things
     var a = readMemoryChar(eip);
     var icode = (a & 0xF0) >> 4;
     var ifun = a & 0x0F;
-    writeWire("F_icode", icode);
-    writeWire("F_ifun", ifun);
+    writeWire("D_icode", icode);
+    writeWire("D_ifun", ifun);
     addAction("icode:ifun <- M1[%eip]")
 
     switch (icode)
@@ -42,7 +42,7 @@ function cycle()
     case OP_NOP:
     case OP_HALT:
     case OP_RET:
-        writeWire("F_valP", eip + 1);
+        writeWire("D_valP", eip + 1);
         addAction("valP <- %eip + 1");
         break;
 
@@ -51,9 +51,9 @@ function cycle()
     case OP_PUSHL:
     case OP_POPL:
         a = readMemoryChar(eip + 1);
-        writeWire("F_rA", (a & 0xF0) >> 4);
-        writeWire("F_rB", a & 0x0F);
-        writeWire("F_valP", eip + 2);
+        writeWire("D_rA", (a & 0xF0) >> 4);
+        writeWire("D_rB", a & 0x0F);
+        writeWire("D_valP", eip + 2);
         addAction("rA:rB <- M1[%eip + 1]")
         addAction("valP <- %eip + 2");
         break;
@@ -62,10 +62,10 @@ function cycle()
     case OP_RMMOVL:
     case OP_MRMOVL:
         a = readMemoryChar(eip + 1);
-        writeWire("F_rA", (a & 0xF0) >> 4);
-        writeWire("F_rB", a & 0x0F);
-        writeWire("F_valC", readMemoryInt(eip + 2));
-        writeWire("F_valP", eip + 6);
+        writeWire("D_rA", (a & 0xF0) >> 4);
+        writeWire("D_rB", a & 0x0F);
+        writeWire("D_valC", readMemoryInt(eip + 2));
+        writeWire("D_valP", eip + 6);
         addAction("rA:rB <- M1[%eip + 1]");
         addAction("valC <- M4[%eip + 2]");
         addAction("valP <- %eip + 6");
@@ -73,8 +73,8 @@ function cycle()
 
     case OP_JMP:
     case OP_CALL:
-        writeWire("F_valC", readMemoryInt(eip + 1));
-        writeWire("F_valP", eip + 5);
+        writeWire("D_valC", readMemoryInt(eip + 1));
+        writeWire("D_valP", eip + 5);
         addAction("valC <- M4[%eip + 1]");
         addAction("valP <- %eip + 5");
         break;

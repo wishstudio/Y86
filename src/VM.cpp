@@ -110,9 +110,18 @@ void VM::reserveWire(const QString &wire)
 void VM::loadObject(const QString &fileName)
 {
     Assembler::compileFile(fileName, d()->m_memory);
+
+    /* power up our machine */
     d()->m_wire->clear();
-    d()->m_wire->writeWire("F_valP", Assembler::startEIP());
+    d()->m_reg->clear();
+    /* eip and esp */
+    d()->m_wire->writeWire("D_valP", Assembler::startEIP()); // TODO: (see Stage_F.js)
     d()->m_reg->writeRegister(REG_ESP, Assembler::startESP());
+    /* clear forwarding registers */
+    d()->m_wire->writeWire("E_dstE", REG_NONE);
+    d()->m_wire->writeWire("M_dstE", REG_NONE);
+    d()->m_wire->writeWire("W_dstE", REG_NONE);
+    emit d()->updateDisplay();
 }
 
 void VM::step()
