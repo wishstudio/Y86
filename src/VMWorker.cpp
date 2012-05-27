@@ -40,6 +40,13 @@ static QScriptValue readWire(QScriptContext *context, QScriptEngine *engine)
     return VM::wireForRead()->readWire(context->argument(0).toString());
 }
 
+static QScriptValue readForwardingWire(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return VM::wireForWrite()->readForwardingWire(context->argument(0).toString());
+}
+
 static QScriptValue writeWire(QScriptContext *context, QScriptEngine *engine)
 {
     if (context->argumentCount() != 2)
@@ -103,6 +110,7 @@ VMWorker::VMWorker(int id, const QString &fileName)
     QScriptValue global = engine->globalObject();
     global.setProperty("__id", id, QScriptValue::ReadOnly);
     global.setProperty("readWire", engine->newFunction(readWire));
+    global.setProperty("readForwardingWire", engine->newFunction(readForwardingWire));
     global.setProperty("writeWire", engine->newFunction(writeWire));
     global.setProperty("readRegister", engine->newFunction(readRegister));
     global.setProperty("writeRegister", engine->newFunction(writeRegister));

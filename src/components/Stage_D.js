@@ -19,7 +19,7 @@
 
 function inWires()
 {
-    return ["D_icode", "D_ifun", "D_valP", "D_rA", "D_rB", "D_valC", "E_dstE", "E_valE", "M_dstE", "M_valE", "W_dstE", "W_valE"];
+    return ["D_icode", "D_ifun", "D_valP", "D_rA", "D_rB", "D_valC", "E_dstE", "M_dstE", "M_valE", "W_dstE", "W_valE"];
 }
 
 function outWires()
@@ -30,7 +30,7 @@ function outWires()
 function fetchRegisterWithForwarding(reg)
 {
     if (reg == readWire("E_dstE"))
-        return readWire("E_valE");
+        return readForwardingWire("M_valE");
     if (reg == readWire("M_dstE"))
         return readWire("M_valE");
     if (reg == readWire("W_dstE"))
@@ -53,7 +53,10 @@ function cycle()
     {
     case OP_RRMOVL:
     case OP_RMMOVL:
-    case OP_MRMOVL:
+        addAction("valA <- R[rB]");
+        srcA = rA;
+        break;
+
     case OP_OPL:
         addAction("valA <- R[rA]");
         addAction("valB <- R[rB]");

@@ -38,12 +38,13 @@ public:
     void copyFrom(Wire *src);
     void reserve(const QString &_key);
     int readWire(const QString &_key) const;
+    int readForwardingWire(const QString &_key) const;
     void writeWire(const QString &_key, int _value);
 
 private:
     QString key[HASH_SIZE];
     int value[HASH_SIZE];
-    bool used[HASH_SIZE];
+    volatile bool used[HASH_SIZE];
 };
 
 #endif

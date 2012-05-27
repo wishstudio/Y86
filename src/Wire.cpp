@@ -31,13 +31,14 @@ Wire::~Wire()
 
 void Wire::clear()
 {
-    memset(used, 0, sizeof used);
+    clearState();
     memset(value, 0, sizeof value);
 }
 
 void Wire::clearState()
 {
-    memset(used, 0, sizeof used);
+    for (int i = 0; i < HASH_SIZE; i++)
+        used[i] = false;
 }
 
 void Wire::copyFrom(Wire *src)
@@ -72,6 +73,16 @@ int Wire::readWire(const QString &_key) const
     uint h = qHash(_key) % HASH_SIZE;
     while (key[h] != _key)
         h = (h + 1) % HASH_SIZE;
+    return value[h];
+}
+
+int Wire::readForwardingWire(const QString &_key) const
+{
+    uint h = qHash(_key) % HASH_SIZE;
+    while (key[h] != _key)
+        h = (h + 1) % HASH_SIZE;
+    /* we won't wait for long, so a spin lock is enough */
+    while (!used[h]);
     return value[h];
 }
 
