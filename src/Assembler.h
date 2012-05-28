@@ -20,7 +20,7 @@
 #ifndef AS_H
 #define AS_H
 
-#include <Qt>
+#include <QVector>
 
 #include "Memory.h"
 
@@ -82,6 +82,9 @@ public:
     static void compileFile(const QString &fileName, Memory *memory);
     static int startEIP();
     static int startESP();
+    static int startStack();
+    static QVector<int> memoryRef();
+    static QVector<QString> code();
 };
 
 #endif

@@ -17,33 +17,32 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef STAGEVIEWER_H
-#define STAGEVIEWER_H
+#ifndef CODELISTMODEL_H
+#define CODELISTMODEL_H
 
-#include <QWidget>
-#include <QLabel>
+#include <QAbstractListModel>
+#include <QVector>
 
-#include "Wire.h"
-
-#define ROW_COUNT        4
-
-class StageViewer: public QWidget
+class CodeListModel: public QAbstractListModel
 {
     Q_OBJECT
 
 public:
-    StageViewer(int id, QWidget *parent = 0);
-    ~StageViewer();
+    CodeListModel(QObject *parent = 0);
+
+    void setMemoryRef(QVector<int> memoryRef, int startStack);
+    void setCode(QVector<QString> code);
+    int rowCount(const QModelIndex &parent) const;
+    int columnCount(const QModelIndex &parent) const { return 4; }
+    QVariant data(const QModelIndex &index, int role) const;
 
 public slots:
     void updateDisplay();
 
 private:
-    QStringList inWires;
-    int id;
-
-    QLabel *actionLabels[ROW_COUNT];
-    QLabel **wireLabels;
+    QVector<int> m_memoryRef;
+    int m_startStack;
+    QVector<QString> m_code;
 };
 
 #endif

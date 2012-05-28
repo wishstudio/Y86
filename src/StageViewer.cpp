@@ -39,18 +39,20 @@ StageViewer::StageViewer(int id, QWidget *parent)
         layout->addWidget(actionLabels[i], i + 1, 0);
     }
     layout->addWidget(new QLabel("Wire inputs", this), 0, 1);
-    for (int i = 0; i < ROW_COUNT; i++)
-        for (int j = 0; j < WIRE_COL_COUNT; j++)
-        {
-            wireLabels[i * WIRE_COL_COUNT + j] = new QLabel("", this);
-            layout->addWidget(wireLabels[i * WIRE_COL_COUNT + j], i + 1, j + 1);
-        }
+    typedef QLabel *PQLabel; /* compilation hack */
+    wireLabels = new PQLabel[inWires.size()];
+    for (int i = 0; i < inWires.size(); i++)
+    {
+        wireLabels[i] = new QLabel("", this);
+        layout->addWidget(wireLabels[i], i % ROW_COUNT + 1, i / ROW_COUNT + 1);
+    }
 
     setLayout(layout);
 }
 
 StageViewer::~StageViewer()
 {
+    delete[] wireLabels;
 }
 
 void StageViewer::updateDisplay()
@@ -60,9 +62,6 @@ void StageViewer::updateDisplay()
         actionLabels[i]->setText("");
     for (int i = 0; i < actions.size(); i++)
         actionLabels[i]->setText(actions.at(i));
-    for (int i = 0; i < ROW_COUNT; i++)
-        for (int j = 0; j < WIRE_COL_COUNT; j++)
-            wireLabels[i * WIRE_COL_COUNT + j]->setText("");
     for (int i = 0; i < inWires.size(); i++)
     {
         const QString &wire = inWires.at(i);

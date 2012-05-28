@@ -32,6 +32,7 @@ function cycle()
     var icode = readWire("W_icode");
     var dstE = readWire("W_dstE");
     var valE = readWire("W_valE");
+    var dstM = readWire("W_dstM");
     var valM = readWire("W_valM");
 
     switch (icode)
@@ -46,15 +47,15 @@ function cycle()
         break;
 
     case OP_MRMOVL:
-        addAction("R[dstE] <- valM");
-        writeRegister(dstE, valM);
+        addAction("R[dstM] <- valM");
+        writeRegister(dstM, valM);
         break;
 
     case OP_POPL:
         addAction("R[%esp] <- valE");
-        addAction("R[dstE] <- valM");
+        addAction("R[dstM] <- valM");
         writeRegister(REG_ESP, valE);
-        writeRegister(dstE, valM);
+        writeRegister(dstM, valM);
         break;
     }
 }

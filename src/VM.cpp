@@ -39,6 +39,8 @@ static int readInt(const QByteArray &bytes, int addr)
 
 VM::VM()
 {
+    m_codeListModel = new CodeListModel();
+    connect(this, SIGNAL(updateDisplay()), m_codeListModel, SLOT(updateDisplay()));
     m_memory = new Memory();
     m_reg = new Register();
     m_wire = new Wire();
@@ -50,6 +52,7 @@ VM::VM()
 
 VM::~VM()
 {
+    delete m_codeListModel;
     delete m_memory;
     delete m_reg;
     delete m_wire;
@@ -83,6 +86,11 @@ QSemaphore *VM::workerSemaphore(int id)
 QSemaphore *VM::monitorSemaphore()
 {
     return d()->m_monitorSemaphore;
+}
+
+CodeListModel *VM::codeListModel()
+{
+    return d()->m_codeListModel;
 }
 
 Memory *VM::memory()
@@ -130,6 +138,8 @@ void VM::loadObject(const QString &fileName)
     d()->m_wire->writeWire("E_dstE", REG_NONE);
     d()->m_wire->writeWire("M_dstE", REG_NONE);
     d()->m_wire->writeWire("W_dstE", REG_NONE);
+    d()->m_codeListModel->setMemoryRef(Assembler::memoryRef(), Assembler::startStack());
+    d()->m_codeListModel->setCode(Assembler::code());
 
     for (int i = 0; i < WORKERS_COUNT; i++)
         d()->stageWorkers[i]->clearWorkerActions();

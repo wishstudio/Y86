@@ -22,6 +22,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QGridLayout>
+#include <QTreeView>
 
 #include "MainWindow.h"
 
@@ -51,9 +52,13 @@ MainWindow::MainWindow(QWidget *parent)
         connect(VM::self(), SIGNAL(updateDisplay()), stageViewer[i], SLOT(updateDisplay()));
         layout->addWidget(stageViewer[i], i + 1, 0);
     }
+    QTreeView *memoryViewer = new QTreeView(this);
+    memoryViewer->setModel(VM::codeListModel());
+    layout->addWidget(memoryViewer, 0, 1, 4, 1);
+
     registerViewer = new RegisterViewer(this);
     connect(VM::self(), SIGNAL(updateDisplay()), registerViewer, SLOT(updateDisplay()));
-    layout->addWidget(registerViewer, 1, 1, 2, 1);
+    layout->addWidget(registerViewer, 4, 1, 2, 1);
 
     setLayout(layout);
 }

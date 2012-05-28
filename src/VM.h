@@ -23,6 +23,7 @@
 #include <QThread>
 #include <QSemaphore>
 
+#include "CodeListModel.h"
 #include "Register.h"
 #include "VMWorker.h"
 #include "Memory.h"
@@ -40,6 +41,7 @@ public:
 
     static void init();
     static VM *self();
+    static CodeListModel *codeListModel();
     static VMWorker *worker(int id);
     static QSemaphore *workerSemaphore(int id);
     static QSemaphore *monitorSemaphore();
@@ -63,6 +65,7 @@ signals:
 private:
     QSemaphore *m_workerSemaphore[WORKERS_COUNT];
     QSemaphore *m_monitorSemaphore;
+    CodeListModel *m_codeListModel;
     Memory *m_memory;
     Register *m_reg;
     Wire *m_wire, *m_nextWire;

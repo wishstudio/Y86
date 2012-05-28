@@ -98,6 +98,14 @@ static QScriptValue writeMemoryInt(QScriptContext *context, QScriptEngine *engin
     return VM::memory()->writeInt(context->argument(0).toInt32(), context->argument(1).toInt32());
 }
 
+static QScriptValue clearAction(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 0)
+        return engine->undefinedValue();
+    VM::worker(engine->globalObject().property("__id").toInt32())->clearWorkerActions();
+    return engine->undefinedValue();
+}
+
 static QScriptValue addAction(QScriptContext *context, QScriptEngine *engine)
 {
     if (context->argumentCount() != 1)
@@ -126,6 +134,7 @@ VMWorker::VMWorker(int id, const QString &fileName)
     global.setProperty("readMemoryChar", engine->newFunction(readMemoryChar));
     global.setProperty("readMemoryInt", engine->newFunction(readMemoryInt));
     global.setProperty("writeMemoryInt", engine->newFunction(writeMemoryInt));
+    global.setProperty("clearAction", engine->newFunction(clearAction));
     global.setProperty("addAction", engine->newFunction(addAction));
     global.setProperty("debug", engine->newFunction(debug));
 

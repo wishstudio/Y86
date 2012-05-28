@@ -40,6 +40,10 @@ static QTextStream inTextStream;
 static Memory *memory;
 static int startEIP;
 static int stackSize;
+static int startStack;
+static QVector<int> memoryRef; // line number -> memory address
+static QVector<QString> code;
+static QString lastLine;
 
 static int line_cnt, tr, tn;
 static QString token;
@@ -47,7 +51,7 @@ static char ch;
 
 static void error(QString error_message)
 {
-    qDebug("Compile error at line %d: %s\n", line_cnt, qPrintable(error_message));
+    qDebug("Compile error at line %d: %s\n", line_cnt + 1, qPrintable(error_message));
     exit(1);
 }
 
@@ -59,6 +63,13 @@ static void getChar()
     {
         inTextStream >> ch;
         ch = tolower(ch);
+        if (ch == '\n')
+        {
+            code.push_back(lastLine);
+            lastLine = "";
+        }
+        else
+            lastLine = lastLine.append(ch);
     }
 }
 
@@ -135,7 +146,10 @@ static void getToken()
             else if (isdigit(ch))
                 base = 8;
             else
-                error("Number expected after 0.");
+            {
+                tn = 0;
+                return;
+            }
         }
         token = "";
         while ((ch >= '0' && ch <= '7') || (base > 8 && ch >= '0' && ch <= '9') || (base > 10 && ch >= 'a' && ch <= 'f'))
@@ -178,6 +192,13 @@ static void expectNumber()
     getToken();
 }
 
+static void expectRawNumber()
+{
+    if (tt != tkNumber && tt != tkMemory)
+        error("Number expected.");
+    getToken();
+}
+
 static void expectComma()
 {
     if (tt != tkComma)
@@ -190,6 +211,32 @@ static void expectRP()
     if (tt != tkRP)
         error("')' expected.");
     getToken();
+}
+
+static void parseMemoryRef(int &reg, QString &label, int &imm)
+{
+    if (tt == tkMemory)
+    {
+        imm = tn;
+        label = QString();
+        getToken();
+    }
+    else if (tt == tkLabel)
+    {
+        label = token;
+        getToken();
+    }
+    else
+        error("Memory reference expected.");
+    if (tt == tkLP)
+    {
+        getToken();
+        reg = tr;
+        expectRegister();
+        expectRP();
+    }
+    else
+        reg = REG_NONE;
 }
 
 static void putAddr(QString label)
@@ -207,6 +254,7 @@ static void compile()
 {
     for (;;)
     {
+        int current_addr = memory->addr(), current_line = line_cnt;
         if (tt == tkEOF)
             break;
         else if (tt == tkDot)
@@ -219,27 +267,49 @@ static void compile()
                 if (startEIP == -1)
                     startEIP = memory->addr();
                 memory->setAttr(false);
-            }
-            else if (label == "stacksize")
-            {
-                stackSize = tn;
-                expectNumber();
+                continue;
             }
             else if (label == "rodata")
-                memory->setAttr(false);
-            else if (label == "data")
-                memory->setAttr(true);
-            else if (label == "origin")
             {
-                int origin = tn;
-                expectNumber();
-                memory->setOrigin(origin);
+                memory->setAttr(false);
+                continue;
+            }
+            else if (label == "data")
+            {
+                memory->setAttr(true);
+                continue;
             }
             else if (label == "reserve")
             {
                 int reserveCount = tn;
-                expectNumber();
+                expectRawNumber();
                 memory->setOrigin(memory->addr() + reserveCount);
+            }
+            else if (label == "db" || label == "dw" || label == "dd")
+            {
+                for (;;)
+                {
+                    if (tt == tkNumber)
+                    {
+                        if (label == "db")
+                            memory->putChar(tn);
+                        else if (label == "dw")
+                            memory->putShort(tn);
+                        else
+                            memory->put(tn);
+                    }
+                    else if (tt == tkMemory)
+                        memory->put(tn);
+                    else if (tt == tkLabel)
+                        putAddr(token);
+                    else
+                        error("Expect immediate value.");
+                    getToken();
+                    if (tt == tkComma)
+                        getToken();
+                    else
+                        break;
+                }
             }
         }
         else if (tt == tkLabel)
@@ -250,6 +320,7 @@ static void compile()
             {
                 symbolTable.insert(label, memory->addr());
                 getToken();
+                continue;
             }
             else if (label == "nop")
                 memory->putChar(PAIR(OP_NOP, 0));
@@ -267,56 +338,54 @@ static void compile()
             }
             else if (label == "irmovl")
             {
-                int num = tn;
-                expectNumber();
+                int num;
+                QString label;
+                if (tt == tkNumber || tt == tkMemory)
+                    num = tn;
+                else if (tt == tkLabel)
+                    label = token;
+                else
+                    error("Expect immediate value.");
+                getToken();
                 expectComma();
                 int rB = tr;
                 expectRegister();
                 memory->putChar(PAIR(OP_IRMOVL, 0));
                 memory->putChar(PAIR(REG_NONE, rB));
-                memory->put(num);
+                if (!label.isEmpty())
+                    putAddr(label);
+                else
+                    memory->put(num);
             }
             else if (label == "rmmovl")
             {
                 int rA = tr;
                 expectRegister();
                 expectComma();
-                QString label = token;
-                expectLabel();
-                int rB;
-                if (tt == tkLP)
-                {
-                    getToken();
-                    rB = tr;
-                    expectRegister();
-                    expectRP();
-                }
-                else
-                    rB = 8;
+                QString label;
+                int imm, rB;
+                parseMemoryRef(rB, label, imm);
                 memory->putChar(PAIR(OP_RMMOVL, 0));
                 memory->putChar(PAIR(rA, rB));
-                putAddr(label);
+                if (!label.isEmpty())
+                    putAddr(label);
+                else
+                    memory->put(imm);
             }
             else if (label == "mrmovl")
             {
-                QString label = token;
-                expectLabel();
-                int rB;
-                if (tt == tkLP)
-                {
-                    getToken();
-                    rB = tr;
-                    expectRegister();
-                    expectRP();
-                }
-                else
-                    rB = 8;
+                QString label;
+                int imm, rB;
+                parseMemoryRef(rB, label, imm);
                 expectComma();
                 int rA = tr;
                 expectRegister();
                 memory->putChar(PAIR(OP_MRMOVL, 0));
                 memory->putChar(PAIR(rA, rB));
-                putAddr(label);
+                if (!label.isEmpty())
+                    putAddr(label);
+                else
+                    memory->put(imm);
             }
             else if (label == "call")
             {
@@ -381,19 +450,28 @@ static void compile()
                 }
             }
         }
+        for (int i = memoryRef.size(); i < current_line; i++)
+            memoryRef.push_back(current_addr);
+        memoryRef.push_back(current_addr);
     }
+    for (int i = 0; i < patchList.size(); i++)
+        memory->patch(patchList[i].second, symbolTable.value(patchList[i].first));
 }
 
 void Assembler::compileFile(const QString &fileName, Memory *memory)
 {
     ::memory = memory;
     ::memory->clear();
-    line_cnt = 1;
+    line_cnt = 0;
     symbolTable.clear();
     patchList.clear();
     ::startEIP = -1;
     /* default stack size: 16KBytes */
     stackSize = 16384;
+    ::memoryRef.clear();
+    ::memoryRef.push_back(0);
+    ::code.clear();
+    ::lastLine.clear();
     inFile.setFileName(fileName);
     inFile.open(QIODevice::ReadOnly);
     inTextStream.setDevice(&inFile);
@@ -401,7 +479,9 @@ void Assembler::compileFile(const QString &fileName, Memory *memory)
     getToken();
     compile();
     inFile.close();
+    ::code.push_back(lastLine);
     /* allocate stack space */
+    ::startStack = memory->addr();
     memory->setOrigin(memory->addr() + stackSize);
 }
 
@@ -413,4 +493,19 @@ int Assembler::startEIP()
 int Assembler::startESP()
 {
     return memory->addr();
+}
+
+int Assembler::startStack()
+{
+    return ::startStack;
+}
+
+QVector<int> Assembler::memoryRef()
+{
+    return ::memoryRef;
+}
+
+QVector<QString> Assembler::code()
+{
+    return ::code;
 }

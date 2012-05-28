@@ -19,22 +19,30 @@
 
 function inWires()
 {
-    return ["D_icode", "D_ifun", "D_valP", "D_rA", "D_rB", "D_valC", "E_dstE", "M_dstE", "M_valE", "W_dstE", "W_valE"];
+    return ["D_icode", "D_ifun", "D_valP", "D_rA", "D_rB", "D_valC", "E_dstE", "E_dstM", "M_dstE", "M_valE", "M_dstM", "W_dstE", "W_valE", "W_dstM", "W_valM"];
 }
 
 function outWires()
 {
-    return ["E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE"];
+    return ["E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE", "E_dstM"];
+}
+
+function bubble()
+{
+    clearAction();
+    addAction("bubble");
+    writeWire("E_icode", OP_NOP);
+    writeWire("E_dstE", REG_NONE);
+    writeWire("E_dstM", REG_NONE);
 }
 
 function fetchRegisterWithForwarding(reg)
 {
-    if (reg == readWire("E_dstE"))
-        return readForwardingWire("M_valE");
-    if (reg == readWire("M_dstE"))
-        return readWire("M_valE");
-    if (reg == readWire("W_dstE"))
-        return readWire("W_valE");
+    if (reg == readWire("E_dstE")) return readForwardingWire("M_valE");
+    if (reg == readWire("M_dstM")) return readForwardingWire("W_valM");
+    if (reg == readWire("M_dstE")) return readWire("M_valE");
+    if (reg == readWire("W_dstM")) return readWire("W_valM");
+    if (reg == readWire("W_dstE")) return readWire("W_valE");
     return readRegister(reg);
 }
 
@@ -79,33 +87,42 @@ function cycle()
     }
     if (srcA != REG_NONE)
     {
+        if (srcA == readWire("E_dstM")) /* stall one cycle for a memory load */
+        {
+            bubble();
+            return;
+        }
         var valA = fetchRegisterWithForwarding(srcA);
         writeWire("E_valA", valA);
     }
     if (srcB != REG_NONE)
     {
+        if (srcB == readWire("E_dstM")) /* stall one cycle for a memory load */
+        {
+            bubble();
+            return;
+        }
         var valB = fetchRegisterWithForwarding(srcB);
         writeWire("E_valB", valB);
     }
 
-    /* calculate dstE */
+    /* calculate dstE/dstM */
+    var dstE = REG_NONE, dstM = REG_NONE;
     switch (icode)
     {
     case OP_MRMOVL:
     case OP_POPL:
-        writeWire("E_dstE", rA);
+        dstM = rA;
         break;
 
     case OP_RRMOVL:
     case OP_IRMOVL:
     case OP_OPL:
-        writeWire("E_dstE", rB);
-        break;
-
-    default:
-        writeWire("E_dstE", REG_NONE);
+        dstE = rB;
         break;
     }
+    writeWire("E_dstE", dstE);
+    writeWire("E_dstM", dstM);
 
     writeWire("E_icode", icode);
     writeWire("E_ifun", ifun);
