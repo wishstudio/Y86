@@ -19,7 +19,7 @@
 
 function inWires()
 {
-    return ["M_icode", "M_valP", "M_dstE", "M_valA", "M_valE", "M_dstM"];
+    return ["M_icode", "M_valP", "M_dstE", "M_valA", "M_valE", "M_dstM", "M_Bch"];
 }
 
 function outWires()

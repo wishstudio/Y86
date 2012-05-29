@@ -20,7 +20,7 @@
 #ifndef REGISTER_H
 #define REGISTER_H
 
-#include <Qt>
+#include "Assembler.h"
 
 class Register
 {
@@ -30,7 +30,7 @@ public:
     void writeRegister(int id, int value);
 
 private:
-    int m_reg[8];
+    int m_reg[REG_CNT];
 };
 
 #endif

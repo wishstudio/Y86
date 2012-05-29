@@ -25,11 +25,25 @@
 #include "VM.h"
 #include "VMWorker.h"
 
+static QScriptValue int32(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return QScriptValue(engine, context->argument(0).toInt32());
+}
+
+static QScriptValue uint32(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return QScriptValue(engine, context->argument(0).toUInt32());
+}
+
 static QScriptValue debug(QScriptContext *context, QScriptEngine *engine)
 {
     if (context->argumentCount() != 1)
         return engine->undefinedValue();
-    qDebug("%s\n", qPrintable(context->argument(0).toString()));
+    qDebug("%s", qPrintable(context->argument(0).toString()));
     return engine->undefinedValue();
 }
 
@@ -137,6 +151,8 @@ VMWorker::VMWorker(int id, const QString &fileName)
     engine = new QScriptEngine();
     QScriptValue global = engine->globalObject();
     global.setProperty("__id", id, QScriptValue::ReadOnly);
+    global.setProperty("int32", engine->newFunction(int32));
+    global.setProperty("uint32", engine->newFunction(uint32));
     global.setProperty("debug", engine->newFunction(debug));
     global.setProperty("readWire", engine->newFunction(readWire));
     global.setProperty("readForwardingWire", engine->newFunction(readForwardingWire));
@@ -150,17 +166,26 @@ VMWorker::VMWorker(int id, const QString &fileName)
     global.setProperty("addAction", engine->newFunction(addAction));
     global.setProperty("stall", engine->newFunction(stall));
 
+    /* instruction */
     for (int i = 0; i < OP_CNT; i++)
         global.setProperty("OP_" + opNames[i].toUpper(), i);
 
+    /* operation */
     for (int i = 0; i < FUN_OPL_CNT; i++)
         global.setProperty("FUN_" + funOplNames[i].toUpper(), i);
 
+    /* Jcc */
     for (int i = 0; i < FUN_JMP_CNT; i++)
         global.setProperty("FUN_" + funJmpNames[i].toUpper(), i);
 
+    /* registers */
     for (int i = 0; i < REG_CNT; i++)
         global.setProperty("REG_" + registerNames[i].toUpper(), i);
+
+    /* eflags */
+    global.setProperty("REG_EFLAGS", REG_NONE);
+    for (int i = 0; i < EFLAGS_CNT; i++)
+        global.setProperty("EFLAGS_" + eflagsNames[i].toUpper(), i);
     engine->evaluate(program);
 
     QScriptValue in = global.property("inWires").call();

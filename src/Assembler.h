@@ -42,13 +42,14 @@ extern QString opNames[];
 
 #define FUN_ADDL    0x00
 #define FUN_SUBL    0x01
-#define FUN_MULL    0x02
-#define FUN_DIVL    0x03
-#define FUN_MODL    0x04
-#define FUN_ANDL    0x05
-#define FUN_ORL     0x06
-#define FUN_XORL    0x07
-#define FUN_OPL_CNT 0x08
+#define FUN_CMPL    0x02
+#define FUN_MULL    0x03
+#define FUN_DIVL    0x04
+#define FUN_MODL    0x05
+#define FUN_ANDL    0x06
+#define FUN_ORL     0x07
+#define FUN_XORL    0x08
+#define FUN_OPL_CNT 0x09
 
 extern QString funOplNames[];
 
@@ -72,9 +73,18 @@ extern QString funJmpNames[];
 #define REG_ESP     0x06
 #define REG_EBP     0x07
 #define REG_NONE    0x08
+#define REG_EFLAGS  0x08
 #define REG_CNT     0x09
 
 extern QString registerNames[];
+
+#define EFLAGS_CF   0x00
+#define EFLAGS_ZF   0x01
+#define EFLAGS_SF   0x02
+#define EFLAGS_OF   0x03
+#define EFLAGS_CNT  0x04
+
+extern QString eflagsNames[];
 
 class Assembler
 {

@@ -24,7 +24,7 @@ function inWires()
 
 function outWires()
 {
-    return ["M_eip", "M_icode", "M_valP", "M_valA", "M_dstE", "M_valE", "M_dstM"];
+    return ["M_eip", "M_icode", "M_valP", "M_valA", "M_dstE", "M_valE", "M_dstM", "M_Bch"];
 }
 
 function bubble()
@@ -76,7 +76,8 @@ function cycle()
         switch (ifun)
         {
         case FUN_ADDL: addAction("valE <- valB + valA"); valE = valB + valA; break;
-        case FUN_SUBL: addAction("valE <- valB - valA"); valE = valB - valA; break;
+        case FUN_SUBL: addAction("valE <- valB - valA"); valE = valB - valA; valA = -valA; break;
+        case FUN_CMPL: addAction("temp <- valB - valA"); valE = valB - valA; valA = -valA; break;
         case FUN_MULL: addAction("valE <- valB * valA"); valE = valB * valA; break;
         case FUN_DIVL: addAction("valE <- valB / valA"); valE = valB / valA; break;
         case FUN_MODL: addAction("valE <- valB % valA"); valE = valB % valA; break;
@@ -84,11 +85,36 @@ function cycle()
         case FUN_ORL:  addAction("valE <- valB | valA"); valE = valB | valA; break;
         case FUN_XORL: addAction("valE <- valB ^ valA"); valE = valB ^ valA; break;
         }
-        // TODO: SetCC
+        valE = int32(valE);
+
+        if (ifun != FUN_MULL && ifun != FUN_DIVL && ifun != FUN_MODL)
+        {
+            addAction("set eflags");
+            var cf = int32(ifun >= FUN_ANDL? 0: uint32(valE) < uint32(valA));
+            var zf = int32((valE == 0));
+            var sf = int32((valE < 0));
+            var of = int32(ifun >= FUN_ANDL? 0: ((valA < 0) === (valB < 0)) && ((valE < 0) !== (valA < 0)));
+            var eflags = (cf << EFLAGS_CF) | (zf << EFLAGS_ZF) | (sf << EFLAGS_SF) | (of << EFLAGS_OF);
+            writeRegister(REG_EFLAGS, eflags);
+        }
         break;
 
     case OP_JMP:
-        // TODO
+        addAction("test eflags");
+        var eflags = readRegister(REG_EFLAGS);
+        var cf = (eflags & (1 << EFLAGS_CF)) >> EFLAGS_CF;
+        var zf = (eflags & (1 << EFLAGS_ZF)) >> EFLAGS_ZF;
+        var sf = (eflags & (1 << EFLAGS_SF)) >> EFLAGS_SF;
+        var of = (eflags & (1 << EFLAGS_OF)) >> EFLAGS_OF;
+
+        var Bch = int32(ifun == FUN_JMP);
+        Bch |= int32(ifun == FUN_JLE) & ((sf ^ of) | zf);
+        Bch |= int32(ifun == FUN_JL) & (sf ^ of);
+        Bch |= int32(ifun == FUN_JE) & (zf);
+        Bch |= int32(ifun == FUN_JNE) & (!zf);
+        Bch |= int32(ifun == FUN_JGE) & (!(sf ^ of));
+        Bch |= int32(ifun == FUN_JG) & (!(sf ^ of) & !zf);
+        writeWire("M_Bch", Bch);
         break;
 
     case OP_CALL:
@@ -128,4 +154,6 @@ function control()
         if (readForwardingWire("d_srcA") == E_dstM || readForwardingWire("d_srcB") == E_dstM)
             bubble();
     }
+    else if (readWire("E_icode") == OP_JMP && !readForwardingWire("M_Bch"))
+        bubble();
 }

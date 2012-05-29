@@ -36,7 +36,8 @@ public slots:
     void updateDisplay();
 
 private:
-    QLabel *registerLabels[REG_NONE];
+    QLabel *registerLabels[8];
+    QLabel *eflagsLabel;
 };
 
 #endif

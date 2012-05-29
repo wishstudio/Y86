@@ -134,7 +134,7 @@ void VM::loadObject(const QString &fileName)
     /* eip and esp */
     for (int i = 0; i < WORKERS_COUNT; i++)
         d()->m_wire->writeWire(stageNames[i] + "_eip", -2);
-    d()->m_wire->writeWire("D_valP", Assembler::startEIP()); // TODO: (see Stage_F.js)
+    d()->m_wire->writeWire("F_predPC", Assembler::startEIP());
     d()->m_reg->writeRegister(REG_ESP, Assembler::startESP());
     /* clear forwarding registers */
     d()->m_wire->writeWire("E_dstE", REG_NONE);

@@ -27,6 +27,17 @@ function outWires()
     return ["d_srcA", "d_srcB", "E_eip", "E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE", "E_dstM"];
 }
 
+function bubble()
+{
+    writeWire("D_eip", -1);
+    writeWire("D_icode", 0);
+    writeWire("D_ifun", 0);
+    writeWire("D_valP", 0);
+    writeWire("D_rA", REG_NONE);
+    writeWire("D_rB", REG_NONE);
+    writeWire("D_valC", 0);
+}
+
 function fetchRegisterWithForwarding(reg)
 {
     if (reg == readWire("E_dstE")) return readForwardingWire("M_valE");
@@ -112,8 +123,12 @@ function cycle()
 
     case OP_RRMOVL:
     case OP_IRMOVL:
-    case OP_OPL:
         dstE = rB;
+        break;
+
+    case OP_OPL:
+        if (ifun != FUN_CMPL)
+            dstE = rB;
         break;
     }
     writeWire("E_dstE", dstE);
@@ -133,4 +148,6 @@ function control()
         if (readForwardingWire("d_srcA") == E_dstM || readForwardingWire("d_srcB") == E_dstM)
             stall();
     }
+    else if (readWire("E_icode") == OP_JMP && !readForwardingWire("M_Bch"))
+        bubble();
 }

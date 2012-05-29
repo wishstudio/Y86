@@ -28,9 +28,10 @@
 #define PAIR(ra, rb) (((ra) << 4) | rb)
 
 QString opNames[] = {"nop", "halt", "rrmovl", "irmovl", "rmmovl", "mrmovl", "opl", "jmp", "call", "ret", "pushl", "popl"};
-QString funOplNames[] = {"addl", "subl", "mull", "divl", "modl", "andl", "orl", "xorl"};
+QString funOplNames[] = {"addl", "subl", "cmpl", "mull", "divl", "modl", "andl", "orl", "xorl"};
 QString funJmpNames[] = {"jmp", "jle", "jl", "je", "jne", "jge", "jg"};
 QString registerNames[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp", "none"};
+QString eflagsNames[] = {"cf", "zf", "sf", "of"};
 
 static enum tokenType {tkEOF, tkComma, tkColon, tkDot, tkRegister, tkMemory, tkNumber, tkLabel, tkLP, tkRP} tt;
 static QMap<QString, int> symbolTable;
@@ -415,7 +416,7 @@ static void compile()
             {
                 int fun = -1;
                 for (int i = 0; i < FUN_OPL_CNT; i++)
-                    if (token == funOplNames[i])
+                    if (label == funOplNames[i])
                     {
                         fun = i;
                         break;
@@ -433,7 +434,7 @@ static void compile()
                 else
                 {
                     for (int i = 0; i < FUN_JMP_CNT; i++)
-                        if (token == funJmpNames[i])
+                        if (label == funJmpNames[i])
                         {
                             fun = i;
                             break;
