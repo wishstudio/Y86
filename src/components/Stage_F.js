@@ -24,7 +24,7 @@ function inWires()
 
 function outWires()
 {
-    return ["D_icode", "D_ifun", "D_rA", "D_rB", "D_valC", "D_valP"];
+    return ["D_icode", "D_ifun", "D_rA", "D_rB", "D_valC", "D_valP", "F_eip", "D_eip"];
 }
 
 function cycle()
@@ -33,6 +33,8 @@ function cycle()
     var a = readMemoryChar(eip);
     var icode = (a & 0xF0) >> 4;
     var ifun = a & 0x0F;
+    writeWire("F_eip", eip);
+    writeWire("D_eip", eip);
     writeWire("D_icode", icode);
     writeWire("D_ifun", ifun);
     addAction("icode:ifun <- M1[%eip]");

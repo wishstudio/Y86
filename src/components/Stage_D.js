@@ -24,7 +24,7 @@ function inWires()
 
 function outWires()
 {
-    return ["d_srcA", "d_srcB", "E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE", "E_dstM"];
+    return ["d_srcA", "d_srcB", "E_eip", "E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE", "E_dstM"];
 }
 
 function fetchRegisterWithForwarding(reg)
@@ -39,6 +39,7 @@ function fetchRegisterWithForwarding(reg)
 
 function cycle()
 {
+    writeWire("E_eip", readWire("D_eip"));
     var icode = readWire("D_icode");
     var ifun = readWire("D_ifun");
     var valP = readWire("D_valP");

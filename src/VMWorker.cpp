@@ -119,6 +119,9 @@ static QScriptValue stall(QScriptContext *context, QScriptEngine *engine)
     QStringList inWires = VM::worker(id)->inWires();
     foreach (QString wire, inWires)
         VM::wireForWrite()->writeWire(wire, VM::wireForRead()->readWire(wire));
+    /* don't need to copy eip on stage F when stalling */
+    if (id > 0)
+        VM::wireForWrite()->writeWire(stageNames[id] + "_eip", VM::wireForRead()->readWire(stageNames[id] + "_eip"));
     return engine->undefinedValue();
 }
 

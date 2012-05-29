@@ -43,6 +43,7 @@ public:
     static VM *self();
     static CodeListModel *codeListModel();
     static VMWorker *worker(int id);
+    static int workerAddr(int id);
     static QSemaphore *workerSemaphore(int id);
     static QSemaphore *monitorSemaphore();
     static Memory *memory();
@@ -70,6 +71,9 @@ private:
     Wire *m_wire, *m_nextWire;
     bool m_stop;
     VMWorker *stageWorkers[WORKERS_COUNT];
+    int m_workerAddr[WORKERS_COUNT];
 };
+
+extern const QString stageNames[];
 
 #endif

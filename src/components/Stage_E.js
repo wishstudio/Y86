@@ -24,11 +24,12 @@ function inWires()
 
 function outWires()
 {
-    return ["M_icode", "M_valP", "M_valA", "M_dstE", "M_valE", "M_dstM"];
+    return ["M_eip", "M_icode", "M_valP", "M_valA", "M_dstE", "M_valE", "M_dstM"];
 }
 
 function bubble()
 {
+    writeWire("E_eip", -1);
     writeWire("E_icode", 0);
     writeWire("E_ifun", 0);
     writeWire("E_valP", 0);
@@ -41,6 +42,7 @@ function bubble()
 
 function cycle()
 {
+    writeWire("M_eip", readWire("E_eip"));
     var icode = readWire("E_icode");
     var ifun = readWire("E_ifun");
     var valP = readWire("E_valP");

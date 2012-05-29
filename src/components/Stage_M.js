@@ -24,11 +24,12 @@ function inWires()
 
 function outWires()
 {
-    return ["W_icode", "W_dstE", "W_valE", "W_dstM", "W_valM"];
+    return ["W_eip", "W_icode", "W_dstE", "W_valE", "W_dstM", "W_valM"];
 }
 
 function cycle()
 {
+    writeWire("W_eip", readWire("M_eip"));
     var icode = readWire("M_icode");
     var valP = readWire("M_valP");
     var dstE = readWire("M_dstE");

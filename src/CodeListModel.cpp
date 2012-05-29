@@ -79,7 +79,14 @@ QVariant CodeListModel::data(const QModelIndex &index, int role) const
         }
 
         case 2:
+        {
+            if (id + 1 < m_memoryRef.size() && m_memoryRef.at(id) == m_memoryRef.at(id + 1))
+                return QVariant();
+            for (int i = 0; i < WORKERS_COUNT; i++)
+                if (m_memoryRef.at(id) == VM::workerAddr(i))
+                    return stageNames[i];
             return QVariant();
+        }
 
         case 3:
             return m_code.at(id);

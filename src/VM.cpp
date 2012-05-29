@@ -28,7 +28,7 @@
 #define STAGE_M    3
 #define STAGE_W    4
 
-const QString stageNames[5] = {"F", "D", "E", "M", "W"};
+const QString stageNames[] = {"F", "D", "E", "M", "W"};
 
 Q_GLOBAL_STATIC(VM, d)
 
@@ -76,6 +76,11 @@ VM *VM::self()
 VMWorker *VM::worker(int id)
 {
     return d()->stageWorkers[id];
+}
+
+int VM::workerAddr(int id)
+{
+    return d()->m_workerAddr[id];
 }
 
 QSemaphore *VM::workerSemaphore(int id)
@@ -127,6 +132,8 @@ void VM::loadObject(const QString &fileName)
     d()->m_wire->clear();
     d()->m_reg->clear();
     /* eip and esp */
+    for (int i = 0; i < WORKERS_COUNT; i++)
+        d()->m_wire->writeWire(stageNames[i] + "_eip", -2);
     d()->m_wire->writeWire("D_valP", Assembler::startEIP()); // TODO: (see Stage_F.js)
     d()->m_reg->writeRegister(REG_ESP, Assembler::startESP());
     /* clear forwarding registers */
@@ -137,7 +144,10 @@ void VM::loadObject(const QString &fileName)
     d()->m_codeListModel->setCode(Assembler::code());
 
     for (int i = 0; i < WORKERS_COUNT; i++)
+    {
+        d()->m_workerAddr[i] = -2;
         d()->stageWorkers[i]->clearWorkerActions();
+    }
     emit d()->updateDisplay();
 }
 
@@ -171,6 +181,9 @@ void VM::run()
         for (int i = 0; i < WORKERS_COUNT; i++)
             m_workerSemaphore[i]->release();
         m_monitorSemaphore->acquire(WORKERS_COUNT);
+        m_workerAddr[0] = m_nextWire->readWire(stageNames[0] + "_eip");
+        for (int i = 1; i < WORKERS_COUNT; i++)
+            m_workerAddr[i] = m_wire->readWire(stageNames[i] + "_eip");
         m_wire->copyFrom(m_nextWire);
         m_nextWire->clearState();
         emit updateDisplay();
