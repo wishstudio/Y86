@@ -53,7 +53,7 @@ function cycle()
     var dstM = readWire("E_dstM");
 
     /* calculate valE */
-    var valE;
+    var valE = 0;
     switch (icode)
     {
     case OP_RRMOVL:

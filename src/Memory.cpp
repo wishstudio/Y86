@@ -42,7 +42,7 @@ void Memory::setOrigin(int origin)
 {
     int oldOrigin = mem.size();
     mem.resize(origin);
-    attrMask.resize((origin + 31) / 32);
+    attrMask.resize(origin / 32 + 1);
     for (int i = oldOrigin; i < origin; i++)
     {
         mem[i] = 0;
@@ -61,7 +61,7 @@ void Memory::setAttr(bool attr)
 void Memory::putChar(char value)
 {
     mem.push_back(value);
-    attrMask.resize((mem.size() + 31) / 32);
+    attrMask.resize(mem.size() / 32 + 1);
     if (currentAttr)
         attrMask[mem.size() / 32] |= 1 << (mem.size() % 32);
     else

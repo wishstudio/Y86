@@ -19,7 +19,7 @@
 
 function inWires()
 {
-    return ["D_icode", "D_ifun", "D_valP", "D_rA", "D_rB", "D_valC", "E_dstE", "E_dstM", "M_dstE", "M_valE", "M_dstM", "W_dstE", "W_valE", "W_dstM", "W_valM"];
+    return ["D_icode", "D_ifun", "D_valP", "D_rA", "D_rB", "D_valC"];
 }
 
 function outWires()
