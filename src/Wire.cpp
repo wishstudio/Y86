@@ -38,7 +38,10 @@ void Wire::clear()
 void Wire::clearState()
 {
     for (int i = 0; i < HASH_SIZE; i++)
+    {
         used[i] = false;
+        value[i] = 0;
+    }
 }
 
 void Wire::copyFrom(Wire *src)

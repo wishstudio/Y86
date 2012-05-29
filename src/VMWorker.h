@@ -41,7 +41,6 @@ public:
     void clearWorkerActions();
     void addWorkerAction(const QString &action);
     QStringList workerActions();
-    void cycle();
     void run();
 
 private:

@@ -59,3 +59,7 @@ function cycle()
         break;
     }
 }
+
+function control()
+{
+}

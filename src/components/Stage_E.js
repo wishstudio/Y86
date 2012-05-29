@@ -24,7 +24,19 @@ function inWires()
 
 function outWires()
 {
-    return ["M_icode", "M_dstE", "M_valP", "M_valA", "M_valE", "M_dstM"];
+    return ["M_icode", "M_valP", "M_valA", "M_dstE", "M_valE", "M_dstM"];
+}
+
+function bubble()
+{
+    writeWire("E_icode", 0);
+    writeWire("E_ifun", 0);
+    writeWire("E_valP", 0);
+    writeWire("E_valA", 0);
+    writeWire("E_valB", 0);
+    writeWire("E_valC", 0);
+    writeWire("E_dstE", REG_NONE);
+    writeWire("E_dstM", REG_NONE);
 }
 
 function cycle()
@@ -100,7 +112,18 @@ function cycle()
 
     writeWire("M_icode", icode);
     writeWire("M_valP", valP);
+    writeWire("M_valA", valA);
     writeWire("M_dstE", dstE);
     writeWire("M_valE", valE);
     writeWire("M_dstM", dstM);
+}
+
+function control()
+{
+    if (readWire("E_icode") == OP_MRMOVL)
+    {
+        var E_dstM = readWire("E_dstM");
+        if (readForwardingWire("d_srcA") == E_dstM || readForwardingWire("d_srcB") == E_dstM)
+            bubble();
+    }
 }

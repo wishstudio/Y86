@@ -49,7 +49,6 @@ public:
     static Register *reg();
     static Wire *wireForRead();
     static Wire *wireForWrite();
-    static bool isFakeRun();
     static void reserveWire(const QString &wire);
 
     static void loadObject(const QString &fileName);
@@ -69,7 +68,7 @@ private:
     Memory *m_memory;
     Register *m_reg;
     Wire *m_wire, *m_nextWire;
-    bool m_stop, m_fakeRun;
+    bool m_stop;
     VMWorker *stageWorkers[WORKERS_COUNT];
 };
 

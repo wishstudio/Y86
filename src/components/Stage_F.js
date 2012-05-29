@@ -35,7 +35,7 @@ function cycle()
     var ifun = a & 0x0F;
     writeWire("D_icode", icode);
     writeWire("D_ifun", ifun);
-    addAction("icode:ifun <- M1[%eip]")
+    addAction("icode:ifun <- M1[%eip]");
 
     switch (icode)
     {
@@ -54,7 +54,7 @@ function cycle()
         writeWire("D_rA", (a & 0xF0) >> 4);
         writeWire("D_rB", a & 0x0F);
         writeWire("D_valP", eip + 2);
-        addAction("rA:rB <- M1[%eip + 1]")
+        addAction("rA:rB <- M1[%eip + 1]");
         addAction("valP <- %eip + 2");
         break;
 
@@ -78,5 +78,15 @@ function cycle()
         addAction("valC <- M4[%eip + 1]");
         addAction("valP <- %eip + 5");
         break;
+    }
+}
+
+function control()
+{
+    if (readWire("E_icode") == OP_MRMOVL)
+    {
+        var E_dstM = readWire("E_dstM");
+        if (readForwardingWire("d_srcA") == E_dstM || readForwardingWire("d_srcB") == E_dstM)
+            stall();
     }
 }

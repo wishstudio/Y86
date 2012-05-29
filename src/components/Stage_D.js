@@ -24,16 +24,7 @@ function inWires()
 
 function outWires()
 {
-    return ["E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE", "E_dstM"];
-}
-
-function bubble()
-{
-    clearAction();
-    addAction("bubble");
-    writeWire("E_icode", OP_NOP);
-    writeWire("E_dstE", REG_NONE);
-    writeWire("E_dstM", REG_NONE);
+    return ["d_srcA", "d_srcB", "E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE", "E_dstM"];
 }
 
 function fetchRegisterWithForwarding(reg)
@@ -60,9 +51,20 @@ function cycle()
     switch (icode)
     {
     case OP_RRMOVL:
-    case OP_RMMOVL:
-        addAction("valA <- R[rB]");
+        addAction("valA <- R[rA]");
         srcA = rA;
+        break;
+
+    case OP_RMMOVL:
+        addAction("valA <- R[rA]");
+        addAction("valB <- R[rB]");
+        srcA = rA;
+        srcB = rB;
+        break;
+
+    case OP_MRMOVL:
+        addAction("valB <- R[rB]");
+        srcB = rB;
         break;
 
     case OP_OPL:
@@ -87,24 +89,16 @@ function cycle()
     }
     if (srcA != REG_NONE)
     {
-        if (srcA == readWire("E_dstM")) /* stall one cycle for a memory load */
-        {
-            bubble();
-            return;
-        }
         var valA = fetchRegisterWithForwarding(srcA);
         writeWire("E_valA", valA);
     }
+    writeWire("d_srcA", srcA);
     if (srcB != REG_NONE)
     {
-        if (srcB == readWire("E_dstM")) /* stall one cycle for a memory load */
-        {
-            bubble();
-            return;
-        }
         var valB = fetchRegisterWithForwarding(srcB);
         writeWire("E_valB", valB);
     }
+    writeWire("d_srcB", srcB);
 
     /* calculate dstE/dstM */
     var dstE = REG_NONE, dstM = REG_NONE;
@@ -128,4 +122,14 @@ function cycle()
     writeWire("E_ifun", ifun);
     writeWire("E_valP", valP);
     writeWire("E_valC", valC);
+}
+
+function control()
+{
+    if (readWire("E_icode") == OP_MRMOVL)
+    {
+        var E_dstM = readWire("E_dstM");
+        if (readForwardingWire("d_srcA") == E_dstM || readForwardingWire("d_srcB") == E_dstM)
+            stall();
+    }
 }

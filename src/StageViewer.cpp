@@ -38,7 +38,7 @@ StageViewer::StageViewer(int id, QWidget *parent)
         actionLabels[i] = new QLabel("", this);
         layout->addWidget(actionLabels[i], i + 1, 0);
     }
-    layout->addWidget(new QLabel("Wire inputs", this), 0, 1);
+    layout->addWidget(new QLabel("Wire outputs", this), 0, 1);
     typedef QLabel *PQLabel; /* compilation hack */
     wireLabels = new PQLabel[inWires.size()];
     for (int i = 0; i < inWires.size(); i++)

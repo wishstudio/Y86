@@ -44,19 +44,12 @@ static QScriptValue readForwardingWire(QScriptContext *context, QScriptEngine *e
 {
     if (context->argumentCount() != 1)
         return engine->undefinedValue();
-    /* If we are doing fake running, no actual data is written to the wire,
-       so the readForwardingWire will deadly block.
-       To workaround we just return a fake 0 value, as this value is
-       unmeaningful in fake mode */
-    if (VM::isFakeRun())
-        return 0;
-    else
-        return VM::wireForWrite()->readForwardingWire(context->argument(0).toString());
+    return VM::wireForWrite()->readForwardingWire(context->argument(0).toString());
 }
 
 static QScriptValue writeWire(QScriptContext *context, QScriptEngine *engine)
 {
-    if (context->argumentCount() != 2 || VM::isFakeRun())
+    if (context->argumentCount() != 2)
         return engine->undefinedValue();
     VM::wireForWrite()->writeWire(context->argument(0).toString(), context->argument(1).toInt32());
     return engine->undefinedValue();
@@ -71,7 +64,7 @@ static QScriptValue readRegister(QScriptContext *context, QScriptEngine *engine)
 
 static QScriptValue writeRegister(QScriptContext *context, QScriptEngine *engine)
 {
-    if (context->argumentCount() != 2 || VM::isFakeRun())
+    if (context->argumentCount() != 2)
         return engine->undefinedValue();
     VM::reg()->writeRegister(context->argument(0).toInt32(), context->argument(1).toInt32());
     return engine->undefinedValue();
@@ -93,7 +86,7 @@ static QScriptValue readMemoryInt(QScriptContext *context, QScriptEngine *engine
 
 static QScriptValue writeMemoryInt(QScriptContext *context, QScriptEngine *engine)
 {
-    if (context->argumentCount() != 2 || VM::isFakeRun())
+    if (context->argumentCount() != 2)
         return engine->undefinedValue();
     return VM::memory()->writeInt(context->argument(0).toInt32(), context->argument(1).toInt32());
 }
@@ -114,6 +107,21 @@ static QScriptValue addAction(QScriptContext *context, QScriptEngine *engine)
     return engine->undefinedValue();
 }
 
+/* a convenient function for stalling a pipeline stage. */
+/* just make sure the input wires do not change */
+static QScriptValue stall(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 0)
+        return engine->undefinedValue();
+    int id = engine->globalObject().property("__id").toInt32();
+    VM::worker(id)->clearWorkerActions();
+    VM::worker(id)->addWorkerAction("stall");
+    QStringList inWires = VM::worker(id)->inWires();
+    foreach (QString wire, inWires)
+        VM::wireForWrite()->writeWire(wire, VM::wireForRead()->readWire(wire));
+    return engine->undefinedValue();
+}
+
 VMWorker::VMWorker(int id, const QString &fileName)
 {
     this->id = id;
@@ -126,6 +134,7 @@ VMWorker::VMWorker(int id, const QString &fileName)
     engine = new QScriptEngine();
     QScriptValue global = engine->globalObject();
     global.setProperty("__id", id, QScriptValue::ReadOnly);
+    global.setProperty("debug", engine->newFunction(debug));
     global.setProperty("readWire", engine->newFunction(readWire));
     global.setProperty("readForwardingWire", engine->newFunction(readForwardingWire));
     global.setProperty("writeWire", engine->newFunction(writeWire));
@@ -136,7 +145,7 @@ VMWorker::VMWorker(int id, const QString &fileName)
     global.setProperty("writeMemoryInt", engine->newFunction(writeMemoryInt));
     global.setProperty("clearAction", engine->newFunction(clearAction));
     global.setProperty("addAction", engine->newFunction(addAction));
-    global.setProperty("debug", engine->newFunction(debug));
+    global.setProperty("stall", engine->newFunction(stall));
 
     for (int i = 0; i < OP_CNT; i++)
         global.setProperty("OP_" + opNames[i].toUpper(), i);
@@ -193,18 +202,16 @@ QStringList VMWorker::workerActions()
     return actions;
 }
 
-void VMWorker::cycle()
-{
-    actions.clear();
-    engine->globalObject().property("cycle").call();
-}
-
 void VMWorker::run()
 {
     shouldStop = false;
     for (;;)
     {
-        cycle();
+        actions.clear();
+        engine->globalObject().property("cycle").call();
+        VM::monitorSemaphore()->release();
+        VM::workerSemaphore(id)->acquire();
+        engine->globalObject().property("control").call();
         VM::monitorSemaphore()->release();
         VM::workerSemaphore(id)->acquire();
         if (shouldStop)

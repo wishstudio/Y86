@@ -40,32 +40,32 @@ function cycle()
     {
     case OP_RMMOVL:
         addAction("M4[valE] <- valA");
-        writeMemory(valE, valA);
+        writeMemoryInt(valE, valA);
         break;
 
     case OP_MRMOVL:
         addAction("valM <- M4[valE]");
-        writeWire("W_valM", readMemory(valE));
+        writeWire("W_valM", readMemoryInt(valE));
         break;
 
     case OP_CALL:
         addAction("M4[valE] <- valP");
-        writeMemory(valE, valP);
+        writeMemoryInt(valE, valP);
         break;
 
     case OP_RET:
         addAction("valM <- M4[valA]");
-        writeWire("W_valM", readMemory(valA));
+        writeWire("W_valM", readMemoryInt(valA));
         break;
 
     case OP_PUSHL:
         addAction("M4[valE] <- valA");
-        writeMemory(valE, valA);
+        writeMemoryInt(valE, valA);
         break;
 
     case OP_POPL:
         addAction("valM <- M4[valA]");
-        writeWire("W_valM", readMemory(valA));
+        writeWire("W_valM", readMemoryInt(valA));
         break;
     }
 
@@ -73,4 +73,8 @@ function cycle()
     writeWire("W_dstE", dstE);
     writeWire("W_valE", valE);
     writeWire("W_dstM", dstM);
+}
+
+function control()
+{
 }
