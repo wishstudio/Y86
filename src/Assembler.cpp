@@ -280,6 +280,12 @@ static void compile()
                 memory->setAttr(true);
                 continue;
             }
+            else if (label == "stack")
+            {
+                ::stackSize = tn;
+                expectRawNumber();
+                continue;
+            }
             else if (label == "reserve")
             {
                 int reserveCount = tn;
@@ -468,8 +474,6 @@ void Assembler::compileFile(const QString &fileName, Memory *memory)
     symbolTable.clear();
     patchList.clear();
     ::startEIP = -1;
-    /* default stack size: 16KBytes */
-    stackSize = 16384;
     ::memoryRef.clear();
     ::memoryRef.push_back(0);
     ::code.clear();
@@ -477,6 +481,8 @@ void Assembler::compileFile(const QString &fileName, Memory *memory)
     inFile.setFileName(fileName);
     inFile.open(QIODevice::ReadOnly);
     inTextStream.setDevice(&inFile);
+    /* default stack size: 0Bytes */
+    ::stackSize = 0;
     getChar();
     getToken();
     compile();

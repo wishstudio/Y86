@@ -6,3 +6,5 @@
 	pushl	%eax
 	popl	%edx
 	rrmovl	%edx, %ecx
+
+	.stack	0x20

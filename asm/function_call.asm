@@ -9,6 +9,8 @@
 	nop
 	nop
 
-func:	irmovl $20, %ebx
+func:	irmovl	$20, %ebx
 	addl	%ebx, %eax
 	ret
+
+	.stack	0x20

@@ -149,6 +149,7 @@ void VM::loadObject(const QString &fileName)
     d()->m_wire->writeWire("M_dstE", REG_NONE);
     d()->m_wire->writeWire("W_dstE", REG_NONE);
     d()->m_codeListModel->setMemory(Assembler::code(), Assembler::memoryRef(), Assembler::startStack());
+    d()->m_stackListModel->setStartStack(Assembler::startStack());
 
     for (int i = 0; i < WORKERS_COUNT; i++)
     {

@@ -8,3 +8,5 @@
 	pushl	%eax
 	popl	%ebx
 	popl	%eax
+
+	.stack	0x20
