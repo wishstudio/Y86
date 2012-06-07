@@ -30,10 +30,10 @@ class CodeListModel: public QAbstractListModel
 public:
     CodeListModel(QObject *parent = 0);
 
-    void setMemoryRef(QVector<int> memoryRef, int startStack);
-    void setCode(QVector<QString> code);
+    void setMemory(QVector<QString> code, QVector<int> memoryRef, int startStack);
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const { return 4; }
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     QVariant data(const QModelIndex &index, int role) const;
 
 public slots:

@@ -391,6 +391,7 @@ static void compile()
             else if (label == "call")
             {
                 QString label = token;
+                getToken();
                 memory->putChar(PAIR(OP_CALL, 0));
                 putAddr(label);
             }
@@ -483,6 +484,7 @@ void Assembler::compileFile(const QString &fileName, Memory *memory)
     ::code.push_back(lastLine);
     /* allocate stack space */
     ::startStack = memory->addr();
+    memory->setAttr(true);
     memory->setOrigin(memory->addr() + stackSize);
 }
 

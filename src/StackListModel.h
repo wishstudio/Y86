@@ -17,27 +17,29 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef REGISTERVIEWER_H
-#define REGISTERVIEWER_H
+#ifndef STACKLISTMODEL_H
+#define STACKLISTMODEL_H
 
-#include <QWidget>
+#include <QAbstractListModel>
 
-#include "Assembler.h"
-#include "HexWidget.h"
-
-class RegisterViewer: public QWidget
+class StackListModel: public QAbstractListModel
 {
     Q_OBJECT
 
 public:
-    RegisterViewer(QWidget *parent = 0);
+    StackListModel(QObject *parent = 0);
+
+    void setStartStack(int startStack);
+    int rowCount(const QModelIndex &parent) const;
+    int columnCount(const QModelIndex &parent) const { return 2; }
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    QVariant data(const QModelIndex &index, int role) const;
 
 public slots:
     void updateDisplay();
 
 private:
-    HexWidget *registerLabels[8];
-    HexWidget *eflagsLabel;
+    int startStack;
 };
 
 #endif

@@ -86,6 +86,17 @@ function cycle()
         srcB = rB;
         break;
 
+    case OP_CALL:
+        addAction("valB <- R[%esp]");
+        srcB = REG_ESP;
+        break;
+
+    case OP_RET:
+        addAction("valA <- R[%esp]");
+        addAction("valB <- R[%esp]");
+        srcA = srcB = REG_ESP;
+        break;
+
     case OP_PUSHL:
         addAction("valA <- R[rA]");
         addAction("valB <- R[%esp]");
@@ -117,7 +128,6 @@ function cycle()
     switch (icode)
     {
     case OP_MRMOVL:
-    case OP_POPL:
         dstM = rA;
         break;
 
@@ -129,6 +139,23 @@ function cycle()
     case OP_OPL:
         if (ifun != FUN_CMPL)
             dstE = rB;
+        break;
+
+    case OP_CALL:
+        dstE = REG_ESP;
+        break;
+
+    case OP_RET:
+        dstE = REG_ESP;
+        break;
+
+    case OP_PUSHL:
+        dstE = REG_ESP;
+        break;
+
+    case OP_POPL:
+        dstE = REG_ESP;
+        dstM = rA;
         break;
     }
     writeWire("E_dstE", dstE);
@@ -142,12 +169,14 @@ function cycle()
 
 function control()
 {
-    if (readWire("E_icode") == OP_MRMOVL)
+    if (readWire("E_icode") == OP_MRMOVL || readWire("E_icode") == OP_POPL)
     {
         var E_dstM = readWire("E_dstM");
         if (readForwardingWire("d_srcA") == E_dstM || readForwardingWire("d_srcB") == E_dstM)
             stall();
     }
     else if (readWire("E_icode") == OP_JMP && !readForwardingWire("M_Bch"))
+        bubble();
+    else if (readWire("D_icode") == OP_RET || readWire("E_icode") == OP_RET || readWire("M_icode") == OP_RET)
         bubble();
 }

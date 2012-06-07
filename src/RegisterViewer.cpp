@@ -17,7 +17,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include <QVBoxLayout>
+#include <QFormLayout>
 
 #include "Register.h"
 #include "RegisterViewer.h"
@@ -26,14 +26,16 @@
 RegisterViewer::RegisterViewer(QWidget *parent)
     : QWidget(parent)
 {
-    QVBoxLayout *layout = new QVBoxLayout(this);
+    QFormLayout *layout = new QFormLayout(this);
     for (int i = 0; i < 8; i++)
     {
-        registerLabels[i] = new QLabel(QString("%%1: ").arg(registerNames[i]), this);
-        layout->addWidget(registerLabels[i]);
+        registerLabels[i] = new HexWidget(this);
+        registerLabels[i]->setBits(8);
+        layout->addRow(QString("%%1: ").arg(registerNames[i]), registerLabels[i]);
     }
-    eflagsLabel = new QLabel("eflags: ", this);
-    layout->addWidget(eflagsLabel);
+    eflagsLabel = new HexWidget(this);
+    eflagsLabel->setBits(8);
+    layout->addRow("eflags: ", eflagsLabel);
 
     setLayout(layout);
 }
@@ -41,6 +43,6 @@ RegisterViewer::RegisterViewer(QWidget *parent)
 void RegisterViewer::updateDisplay()
 {
     for (int i = 0; i < 8; i++)
-        registerLabels[i]->setText(QString("%%1: %2").arg(registerNames[i]).arg(VM::reg()->readRegister(i)));
-    eflagsLabel->setText(QString("eflags: %1").arg(VM::reg()->readRegister(REG_EFLAGS)));
+        registerLabels[i]->setNumber(VM::reg()->readRegister(i));
+    eflagsLabel->setNumber(VM::reg()->readRegister(REG_EFLAGS));
 }

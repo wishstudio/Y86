@@ -25,6 +25,7 @@
 
 #include "CodeListModel.h"
 #include "Register.h"
+#include "StackListModel.h"
 #include "VMWorker.h"
 #include "Memory.h"
 #include "Wire.h"
@@ -42,6 +43,7 @@ public:
     static void init();
     static VM *self();
     static CodeListModel *codeListModel();
+    static StackListModel *stackListModel();
     static VMWorker *worker(int id);
     static int workerAddr(int id);
     static QSemaphore *workerSemaphore(int id);
@@ -66,6 +68,7 @@ private:
     QSemaphore *m_workerSemaphore[WORKERS_COUNT];
     QSemaphore *m_monitorSemaphore;
     CodeListModel *m_codeListModel;
+    StackListModel *m_stackListModel;
     Memory *m_memory;
     Register *m_reg;
     Wire *m_wire, *m_nextWire;

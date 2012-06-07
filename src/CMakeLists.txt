@@ -1,6 +1,6 @@
 include_directories(..)
 
-set(Y86_SRCS main.cpp Assembler.cpp CodeListModel.cpp MainWindow.cpp StageViewer.cpp Register.cpp RegisterViewer.cpp VM.cpp VMWorker.cpp Memory.cpp Wire.cpp)
+set(Y86_SRCS main.cpp Assembler.cpp CodeListModel.cpp HexWidget.cpp MainWindow.cpp StageViewer.cpp Register.cpp RegisterViewer.cpp StackListModel.cpp VM.cpp VMWorker.cpp Memory.cpp Wire.cpp)
 
 set(Y86_RCCS Components.qrc)
 

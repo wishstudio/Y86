@@ -32,6 +32,8 @@ function cycle()
     var eip;
     if (readWire("M_icode") == OP_JMP && !readWire("M_Bch"))
         eip = readWire("M_valP");
+    else if (readWire("W_icode") == OP_RET)
+        eip = readWire("W_valM");
     else
         eip = readWire("F_predPC");
     var a = readMemoryChar(eip);
@@ -94,10 +96,12 @@ function cycle()
 
 function control()
 {
-    if (readWire("E_icode") == OP_MRMOVL)
+    if (readWire("E_icode") == OP_MRMOVL || readWire("E_icode") == OP_POPL)
     {
         var E_dstM = readWire("E_dstM");
         if (readForwardingWire("d_srcA") == E_dstM || readForwardingWire("d_srcB") == E_dstM)
             stall();
     }
+    else if (readWire("D_icode") == OP_RET || readWire("E_icode") == OP_RET || readWire("M_icode") == OP_RET)
+        stall();
 }

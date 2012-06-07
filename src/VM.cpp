@@ -41,6 +41,8 @@ VM::VM()
 {
     m_codeListModel = new CodeListModel();
     connect(this, SIGNAL(updateDisplay()), m_codeListModel, SLOT(updateDisplay()));
+    m_stackListModel = new StackListModel();
+    connect(this, SIGNAL(updateDisplay()), m_stackListModel, SLOT(updateDisplay()));
     m_memory = new Memory();
     m_reg = new Register();
     m_wire = new Wire();
@@ -53,6 +55,7 @@ VM::VM()
 VM::~VM()
 {
     delete m_codeListModel;
+    delete m_stackListModel;
     delete m_memory;
     delete m_reg;
     delete m_wire;
@@ -98,6 +101,11 @@ CodeListModel *VM::codeListModel()
     return d()->m_codeListModel;
 }
 
+StackListModel *VM::stackListModel()
+{
+    return d()->m_stackListModel;
+}
+
 Memory *VM::memory()
 {
     return d()->m_memory;
@@ -140,8 +148,7 @@ void VM::loadObject(const QString &fileName)
     d()->m_wire->writeWire("E_dstE", REG_NONE);
     d()->m_wire->writeWire("M_dstE", REG_NONE);
     d()->m_wire->writeWire("W_dstE", REG_NONE);
-    d()->m_codeListModel->setMemoryRef(Assembler::memoryRef(), Assembler::startStack());
-    d()->m_codeListModel->setCode(Assembler::code());
+    d()->m_codeListModel->setMemory(Assembler::code(), Assembler::memoryRef(), Assembler::startStack());
 
     for (int i = 0; i < WORKERS_COUNT; i++)
     {

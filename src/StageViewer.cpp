@@ -29,25 +29,39 @@ StageViewer::StageViewer(int id, QWidget *parent)
     this->id = id;
     inWires = VM::worker(id)->inWires();
 
-    QGridLayout *layout = new QGridLayout(this);
-    layout->setSpacing(0);
+    QGridLayout *wireLayout = new QGridLayout(this);
+    wireLayout->setSpacing(0);
 
-    layout->addWidget(new QLabel("Actions", this), 0, 0);
-    for (int i = 0; i < ROW_COUNT; i++)
-    {
-        actionLabels[i] = new QLabel("", this);
-        layout->addWidget(actionLabels[i], i + 1, 0);
-    }
-    layout->addWidget(new QLabel("Wire outputs", this), 0, 1);
-    typedef QLabel *PQLabel; /* compilation hack */
-    wireLabels = new PQLabel[inWires.size()];
+    typedef HexWidget *PHexWidget; /* compilation hack */
+    wireLabels = new PHexWidget[inWires.size()];
     for (int i = 0; i < inWires.size(); i++)
     {
-        wireLabels[i] = new QLabel("", this);
-        layout->addWidget(wireLabels[i], i % ROW_COUNT + 1, i / ROW_COUNT + 1);
+        wireLabels[i] = new HexWidget(this);
+        wireLabels[i]->setBits(8);
+        wireLayout->addWidget(new QLabel(omitStageName(inWires.at(i)), this), 0, i, Qt::AlignLeft);
+        wireLayout->addWidget(wireLabels[i], 1, i, Qt::AlignLeft);
     }
 
-    setLayout(layout);
+    setLayout(wireLayout);
+//    QGridLayout *layout = new QGridLayout(this);
+//    layout->setSpacing(0);
+
+//    layout->addWidget(new QLabel("Actions", this), 0, 0);
+//    for (int i = 0; i < ROW_COUNT; i++)
+//    {
+//        actionLabels[i] = new QLabel("", this);
+//        layout->addWidget(actionLabels[i], i + 1, 0);
+//    }
+//    layout->addWidget(new QLabel("Wire outputs", this), 0, 1);
+//    typedef QLabel *PQLabel; /* compilation hack */
+//    wireLabels = new PQLabel[inWires.size()];
+//    for (int i = 0; i < inWires.size(); i++)
+//    {
+//        wireLabels[i] = new QLabel("", this);
+//        layout->addWidget(wireLabels[i], i % ROW_COUNT + 1, i / ROW_COUNT + 1);
+//    }
+//
+//    setLayout(layout);
 }
 
 StageViewer::~StageViewer()
@@ -57,14 +71,20 @@ StageViewer::~StageViewer()
 
 void StageViewer::updateDisplay()
 {
-    QStringList actions = VM::worker(id)->workerActions();
+    /*QStringList actions = VM::worker(id)->workerActions();
     for (int i = 0; i < ROW_COUNT; i++)
         actionLabels[i]->setText("");
     for (int i = 0; i < actions.size(); i++)
-        actionLabels[i]->setText(actions.at(i));
+        actionLabels[i]->setText(actions.at(i));*/
     for (int i = 0; i < inWires.size(); i++)
-    {
-        const QString &wire = inWires.at(i);
-        wireLabels[i]->setText(wire + ": " + QString::number(VM::wireForRead()->readWire(wire)));
-    }
+        wireLabels[i]->setNumber(VM::wireForRead()->readWire(inWires.at(i)));
+}
+
+QString StageViewer::omitStageName(const QString &wire)
+{
+    int p = wire.indexOf("_");
+    if (p == -1)
+        return wire;
+    else
+        return wire.mid(p + 1);
 }

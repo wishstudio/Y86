@@ -17,27 +17,28 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef REGISTERVIEWER_H
-#define REGISTERVIEWER_H
+#ifndef HEXWIDGET_H
+#define HEXWIDGET_H
 
 #include <QWidget>
+#include <QFont>
 
-#include "Assembler.h"
-#include "HexWidget.h"
-
-class RegisterViewer: public QWidget
+class HexWidget: public QWidget
 {
     Q_OBJECT
 
 public:
-    RegisterViewer(QWidget *parent = 0);
+    HexWidget(QWidget *parent = 0);
 
-public slots:
-    void updateDisplay();
+    void paintEvent(QPaintEvent *);
+    void setBits(int number);
+    void setNumber(int number);
 
 private:
-    HexWidget *registerLabels[8];
-    HexWidget *eflagsLabel;
+    QFont font;
+    int w, h;
+    int number;
+    int bits;
 };
 
 #endif

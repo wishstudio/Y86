@@ -54,7 +54,11 @@ MainWindow::MainWindow(QWidget *parent)
     }
     QTreeView *memoryViewer = new QTreeView(this);
     memoryViewer->setModel(VM::codeListModel());
-    layout->addWidget(memoryViewer, 0, 1, 4, 1);
+    layout->addWidget(memoryViewer, 0, 1, 4, 2);
+
+    QTreeView *stackViewer = new QTreeView(this);
+    stackViewer->setModel(VM::stackListModel());
+    layout->addWidget(stackViewer, 4, 2, 2, 1);
 
     registerViewer = new RegisterViewer(this);
     connect(VM::self(), SIGNAL(updateDisplay()), registerViewer, SLOT(updateDisplay()));

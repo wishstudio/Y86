@@ -17,29 +17,30 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include "CodeListModel.h"
+#include "Assembler.h"
+#include "Register.h"
+#include "StackListModel.h"
 #include "VM.h"
 
-CodeListModel::CodeListModel(QObject *parent)
+StackListModel::StackListModel(QObject *parent)
     : QAbstractListModel(parent)
 {
+    startStack = 0;
 }
 
-void CodeListModel::setMemory(QVector<QString> code, QVector<int> memoryRef, int startStack)
+void StackListModel::setStartStack(int startStack)
 {
     emit layoutAboutToBeChanged();
-    m_code = code;
-    m_memoryRef = memoryRef;
-    m_startStack = startStack;
+    this->startStack = startStack;
     emit layoutChanged();
 }
 
-int CodeListModel::rowCount(const QModelIndex &parent) const
+int StackListModel::rowCount(const QModelIndex &parent) const
 {
-    return m_memoryRef.size();
+    return (VM::memory()->addr() - startStack) / 4;
 }
 
-QVariant CodeListModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant StackListModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
@@ -50,43 +51,28 @@ QVariant CodeListModel::headerData(int section, Qt::Orientation orientation, int
 
         case 1:
             return "Data";
-
-        case 2:
-            return "Stage";
-
-        case 3:
-            return "Code";
         }
     }
     return QVariant();
 }
 
-QVariant CodeListModel::data(const QModelIndex &index, int role) const
+QVariant StackListModel::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole)
     {
-        int id = index.row();
-        switch (index.column())
+        int row = index.row();
+        int addr = VM::memory()->addr() - row * 4 - 4;
+        if (index.column() == 0)
         {
-        case 0:
-        {
-            if (id + 1 < m_memoryRef.size() && m_memoryRef.at(id) == m_memoryRef.at(id + 1))
-                return QVariant();
-            QString ret = QString::number(m_memoryRef.at(id), 16).toUpper();
+            QString ret = QString::number(addr, 16).toUpper();
             while (ret.size() < 8)
                 ret = ret.prepend("0");
             return ret;
         }
-
-        case 1:
+        else if (index.column() == 1)
         {
-            int high;
-            if (id == m_memoryRef.size() - 1)
-                high = m_startStack;
-            else
-                high = m_memoryRef[id + 1];
             QString ret;
-            for (int i = m_memoryRef[id]; i < high; i++)
+            for (int i = addr; i < addr + 4; i++)
             {
                 QString p = QString::number((unsigned char) VM::memory()->readChar(i), 16).toUpper();
                 if (p.size() < 2)
@@ -97,25 +83,12 @@ QVariant CodeListModel::data(const QModelIndex &index, int role) const
             }
             return ret;
         }
-
-        case 2:
-        {
-            if (id + 1 < m_memoryRef.size() && m_memoryRef.at(id) == m_memoryRef.at(id + 1))
-                return QVariant();
-            for (int i = 0; i < WORKERS_COUNT; i++)
-                if (m_memoryRef.at(id) == VM::workerAddr(i))
-                    return stageNames[i];
-            return QVariant();
-        }
-
-        case 3:
-            return m_code.at(id);
-        }
     }
     return QVariant();
 }
 
-void CodeListModel::updateDisplay()
+void StackListModel::updateDisplay()
 {
-    emit dataChanged(createIndex(0, 0), createIndex(m_memoryRef.size() - 1, 4));
+    emit layoutAboutToBeChanged();
+    emit layoutChanged();
 }

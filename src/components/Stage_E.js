@@ -148,7 +148,7 @@ function cycle()
 
 function control()
 {
-    if (readWire("E_icode") == OP_MRMOVL)
+    if (readWire("E_icode") == OP_MRMOVL || readWire("E_icode") == OP_POPL)
     {
         var E_dstM = readWire("E_dstM");
         if (readForwardingWire("d_srcA") == E_dstM || readForwardingWire("d_srcB") == E_dstM)

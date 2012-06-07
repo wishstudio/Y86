@@ -23,6 +23,7 @@
 #include <QWidget>
 #include <QLabel>
 
+#include "HexWidget.h"
 #include "Wire.h"
 
 #define ROW_COUNT        4
@@ -39,11 +40,12 @@ public slots:
     void updateDisplay();
 
 private:
+    QString omitStageName(const QString &wire);
     QStringList inWires;
     int id;
 
     QLabel *actionLabels[ROW_COUNT];
-    QLabel **wireLabels;
+    HexWidget **wireLabels;
 };
 
 #endif

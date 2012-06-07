@@ -40,6 +40,7 @@ function cycle()
     case OP_RRMOVL:
     case OP_IRMOVL:
     case OP_OPL:
+    case OP_CALL:
     case OP_RET:
     case OP_PUSHL:
         addAction("R[dstE] <- valE");
