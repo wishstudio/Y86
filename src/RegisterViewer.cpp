@@ -27,7 +27,7 @@ RegisterViewer::RegisterViewer(QWidget *parent)
     : QWidget(parent)
 {
     QFormLayout *layout = new QFormLayout(this);
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 9; i++)
     {
         registerLabels[i] = new HexWidget(this);
         registerLabels[i]->setBits(8);
@@ -42,7 +42,7 @@ RegisterViewer::RegisterViewer(QWidget *parent)
 
 void RegisterViewer::updateDisplay()
 {
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 9; i++)
         registerLabels[i]->setNumber(VM::reg()->readRegister(i));
     eflagsLabel->setNumber(VM::reg()->readRegister(REG_EFLAGS));
 }

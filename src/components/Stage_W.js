@@ -19,7 +19,7 @@
 
 function inWires()
 {
-    return ["W_icode", "W_dstE", "W_valE", "W_valM"];
+    return ["W_icode", "W_ifun", "W_dstE", "W_valE", "W_valM"];
 }
 
 function outWires()
@@ -43,6 +43,7 @@ function cycle()
     case OP_CALL:
     case OP_RET:
     case OP_PUSHL:
+    case OP_LIDT:
         addAction("R[dstE] <- valE");
         writeRegister(dstE, valE);
         break;

@@ -36,7 +36,7 @@ public slots:
     void updateDisplay();
 
 private:
-    HexWidget *registerLabels[8];
+    HexWidget *registerLabels[9];
     HexWidget *eflagsLabel;
 };
 

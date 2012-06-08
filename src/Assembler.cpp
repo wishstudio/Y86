@@ -27,10 +27,11 @@
 
 #define PAIR(ra, rb) (((ra) << 4) | rb)
 
-QString opNames[] = {"nop", "halt", "rrmovl", "irmovl", "rmmovl", "mrmovl", "opl", "jmp", "call", "ret", "pushl", "popl"};
+QString opNames[] = {"nop", "halt", "rrmovl", "irmovl", "rmmovl", "mrmovl", "opl", "jmp", "call", "ret", "pushl", "popl", "lidt", "int", "excep"};
 QString funOplNames[] = {"addl", "subl", "cmpl", "mull", "divl", "modl", "andl", "orl", "xorl"};
 QString funJmpNames[] = {"jmp", "jle", "jl", "je", "jne", "jge", "jg"};
-QString registerNames[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp", "none"};
+QString exceptionNames[] = {"divbz"};
+QString registerNames[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp", "idtr", "none"};
 QString eflagsNames[] = {"cf", "zf", "sf", "of"};
 
 static enum tokenType {tkEOF, tkComma, tkColon, tkDot, tkRegister, tkMemory, tkNumber, tkLabel, tkLP, tkRP} tt;
@@ -418,6 +419,17 @@ static void compile()
                 expectRegister();
                 memory->putChar(PAIR(OP_POPL, 0));
                 memory->putChar(PAIR(rA, REG_NONE));
+            }
+            else if (label == "lidt")
+            {
+                memory->putChar(PAIR(OP_LIDT, 0));
+                if (tt == tkMemory)
+                    memory->put(tn);
+                else if (tt == tkLabel)
+                    putAddr(token);
+                else
+                    error("Expected immediate value.");
+                getToken();
             }
             else
             {

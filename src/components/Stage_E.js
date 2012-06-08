@@ -24,7 +24,7 @@ function inWires()
 
 function outWires()
 {
-    return ["M_eip", "M_icode", "M_valP", "M_valA", "M_dstE", "M_valE", "M_dstM", "M_Bch"];
+    return ["e_icode", "M_eip", "M_icode", "M_ifun", "M_valP", "M_valA", "M_dstE", "M_valE", "M_dstM", "M_Bch"];
 }
 
 function bubble()
@@ -42,7 +42,6 @@ function bubble()
 
 function cycle()
 {
-    writeWire("M_eip", readWire("E_eip"));
     var icode = readWire("E_icode");
     var ifun = readWire("E_ifun");
     var valP = readWire("E_valP");
@@ -62,6 +61,7 @@ function cycle()
         break;
 
     case OP_IRMOVL:
+    case OP_LIDT:
         addAction("valE <- valC");
         valE = valC;
         break;
@@ -79,7 +79,20 @@ function cycle()
         case FUN_SUBL: addAction("valE <- valB - valA"); valE = valB - valA; valA = -valA; break;
         case FUN_CMPL: addAction("temp <- valB - valA"); valE = valB - valA; valA = -valA; break;
         case FUN_MULL: addAction("valE <- valB * valA"); valE = valB * valA; break;
-        case FUN_DIVL: addAction("valE <- valB / valA"); valE = valB / valA; break;
+        case FUN_DIVL:
+            addAction("valE <- valB / valA");
+            /* divide by zero */
+            if (valA == 0)
+            {
+                addAction("exception");
+                writeWire("e_icode", OP_EXCEP);
+                writeWire("M_icode", OP_EXCEP);
+                writeWire("M_ifun", EXCEP_DIVBZ);
+                writeWire("M_eip", -1);
+                return;
+            }
+            valE = valB / valA;
+            break;
         case FUN_MODL: addAction("valE <- valB % valA"); valE = valB % valA; break;
         case FUN_ANDL: addAction("valE <- valB & valA"); valE = valB & valA; break;
         case FUN_ORL:  addAction("valE <- valB | valA"); valE = valB | valA; break;
@@ -136,14 +149,25 @@ function cycle()
         addAction("valE <- valB + 4");
         valE = valB + 4;
         break;
+
+    case OP_INT:
+        addAction("valE <- valB + ifun * 4");
+        valE = valB + ifun * 4;
+        break;
+
+    case OP_EXCEP:
+        icode = OP_NOP;
+        break;
     }
 
+    writeWire("e_icode", icode);
     writeWire("M_icode", icode);
     writeWire("M_valP", valP);
     writeWire("M_valA", valA);
     writeWire("M_dstE", dstE);
     writeWire("M_valE", valE);
     writeWire("M_dstM", dstM);
+    writeWire("M_eip", readWire("E_eip"));
 }
 
 function control()
@@ -155,5 +179,7 @@ function control()
             bubble();
     }
     else if (readWire("E_icode") == OP_JMP && !readForwardingWire("M_Bch"))
+        bubble();
+    else if (readForwardingWire("e_icode") == OP_EXCEP || readForwardingWire("m_icode") == OP_EXCEP)
         bubble();
 }

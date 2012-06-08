@@ -36,7 +36,10 @@
 #define OP_RET      0x09
 #define OP_PUSHL    0x0A
 #define OP_POPL     0x0B
-#define OP_CNT      0x0C
+#define OP_LIDT     0x0C
+#define OP_INT      0x0D
+#define OP_EXCEP    0x0E
+#define OP_CNT      0x0F
 
 extern QString opNames[];
 
@@ -64,6 +67,11 @@ extern QString funOplNames[];
 
 extern QString funJmpNames[];
 
+#define EXCEP_DIVBZ 0x00
+#define EXCEP_CNT   0x01
+
+extern QString exceptionNames[];
+
 #define REG_EAX     0x00
 #define REG_ECX     0x01
 #define REG_EDX     0x02
@@ -72,9 +80,10 @@ extern QString funJmpNames[];
 #define REG_EDI     0x05
 #define REG_ESP     0x06
 #define REG_EBP     0x07
-#define REG_NONE    0x08
-#define REG_EFLAGS  0x08
-#define REG_CNT     0x09
+#define REG_IDTR    0x08
+#define REG_NONE    0x09
+#define REG_EFLAGS  0x09
+#define REG_CNT     0x0A
 
 extern QString registerNames[];
 

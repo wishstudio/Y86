@@ -24,7 +24,7 @@ function inWires()
 
 function outWires()
 {
-    return ["d_srcA", "d_srcB", "E_eip", "E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE", "E_dstM"];
+    return ["d_icode", "d_srcA", "d_srcB", "E_eip", "E_icode", "E_ifun", "E_valP", "E_valA", "E_valB", "E_valC", "E_dstE", "E_dstM"];
 }
 
 function bubble()
@@ -53,9 +53,9 @@ function cycle()
     writeWire("E_eip", readWire("D_eip"));
     var icode = readWire("D_icode");
     var ifun = readWire("D_ifun");
-    var valP = readWire("D_valP");
     var rA = readWire("D_rA");
     var rB = readWire("D_rB");
+    var valP = readWire("D_valP");
     var valC = readWire("D_valC");
 
     /* calculate valA and valB */
@@ -109,6 +109,11 @@ function cycle()
         addAction("valB <- R[%esp]");
         srcA = srcB = REG_ESP;
         break;
+
+    case OP_INT:
+        addAction("valB <- R[%idtr]");
+        srcB = REG_IDTR;
+        break;
     }
     if (srcA != REG_NONE)
     {
@@ -157,10 +162,19 @@ function cycle()
         dstE = REG_ESP;
         dstM = rA;
         break;
+
+    case OP_LIDT:
+        dstE = REG_IDTR;
+        break;
+
+    case OP_EXCEP:
+        icode = OP_NOP;
+        break;
     }
     writeWire("E_dstE", dstE);
     writeWire("E_dstM", dstM);
 
+    writeWire("d_icode", icode);
     writeWire("E_icode", icode);
     writeWire("E_ifun", ifun);
     writeWire("E_valP", valP);
@@ -178,5 +192,9 @@ function control()
     else if (readWire("E_icode") == OP_JMP && !readForwardingWire("M_Bch"))
         bubble();
     else if (readWire("D_icode") == OP_RET || readWire("E_icode") == OP_RET || readWire("M_icode") == OP_RET)
+        bubble();
+    else if (readWire("D_icode") == OP_INT || readWire("E_icode") == OP_INT || readWire("M_icode") == OP_INT)
+        bubble();
+    else if (readForwardingWire("d_icode") == OP_EXCEP || readForwardingWire("e_icode") == OP_EXCEP || readForwardingWire("m_icode") == OP_EXCEP)
         bubble();
 }

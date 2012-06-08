@@ -29,16 +29,35 @@ function outWires()
 
 function cycle()
 {
+    var icode, ifun;
+    if (readWire("D_icode") == OP_EXCEP || readWire("E_icode") == OP_EXCEP || readWire("M_icode") == OP_EXCEP || readWire("W_icode") == OP_EXCEP)
+    {
+        icode = OP_INT;
+        /* the order matters */
+        if (readWire("M_icode") == OP_EXCEP)
+            ifun = readWire("M_ifun");
+        else if (readWire("E_icode") == OP_EXCEP)
+            ifun = readWire("E_ifun");
+        else if (readWire("D_icode") == OP_EXCEP)
+            ifun = readWire("D_ifun");
+        writeWire("D_eip", -1);
+        writeWire("D_icode", icode);
+        writeWire("D_ifun", ifun);
+        writeWire("F_eip", readWire("F_predPC"));
+        writeWire("F_predPC", readWire("F_predPC"));
+        return;
+    }
+
     var eip;
     if (readWire("M_icode") == OP_JMP && !readWire("M_Bch"))
         eip = readWire("M_valP");
-    else if (readWire("W_icode") == OP_RET)
+    else if (readWire("W_icode") == OP_RET || readWire("W_icode") == OP_INT)
         eip = readWire("W_valM");
     else
         eip = readWire("F_predPC");
     var a = readMemoryChar(eip);
-    var icode = (a & 0xF0) >> 4;
-    var ifun = a & 0x0F;
+    icode = (a & 0xF0) >> 4;
+    ifun = a & 0x0F;
     writeWire("F_eip", eip);
     writeWire("D_eip", eip);
     writeWire("D_icode", icode);
@@ -50,6 +69,7 @@ function cycle()
     case OP_NOP:
     case OP_HALT:
     case OP_RET:
+    case OP_INT:
         addAction("valP <- %eip + 1");
         writeWire("D_valP", eip + 1);
         writeWire("F_predPC", eip + 1);
@@ -91,6 +111,13 @@ function cycle()
         writeWire("D_valP", eip + 5);
         writeWire("F_predPC", valC);
         break;
+
+    case OP_LIDT:
+        addAction("valP <- %eip + 5");
+        writeWire("D_valC", readMemoryInt(eip + 1));
+        writeWire("D_valP", eip + 5);
+        writeWire("F_predPC", eip + 5);
+        break;
     }
 }
 
@@ -103,5 +130,7 @@ function control()
             stall();
     }
     else if (readWire("D_icode") == OP_RET || readWire("E_icode") == OP_RET || readWire("M_icode") == OP_RET)
+        stall();
+    else if (readWire("D_icode") == OP_INT || readWire("E_icode") == OP_INT || readWire("M_icode") == OP_INT)
         stall();
 }

@@ -19,12 +19,25 @@
 
 function inWires()
 {
-    return ["M_icode", "M_valP", "M_dstE", "M_valA", "M_valE", "M_dstM", "M_Bch"];
+    return ["M_icode", "M_ifun", "M_valP", "M_dstE", "M_valA", "M_valE", "M_dstM", "M_Bch"];
 }
 
 function outWires()
 {
-    return ["W_eip", "W_icode", "W_dstE", "W_valE", "W_dstM", "W_valM"];
+    return ["m_icode", "W_eip", "W_icode", "W_ifun", "W_dstE", "W_valE", "W_dstM", "W_valM"];
+}
+
+function bubble()
+{
+    writeWire("M_eip", -1);
+    writeWire("M_icode", 0);
+    writeWire("M_ifun", 0);
+    writeWire("M_valP", 0);
+    writeWire("M_valA", 0);
+    writeWire("M_valE", 0);
+    writeWire("M_Bch", 0);
+    writeWire("M_dstE", REG_NONE);
+    writeWire("M_dstM", REG_NONE);
 }
 
 function cycle()
@@ -45,6 +58,7 @@ function cycle()
         break;
 
     case OP_MRMOVL:
+    case OP_INT:
         addAction("valM <- M4[valE]");
         writeWire("W_valM", readMemoryInt(valE));
         break;
@@ -68,8 +82,13 @@ function cycle()
         addAction("valM <- M4[valA]");
         writeWire("W_valM", readMemoryInt(valA));
         break;
+
+    case OP_EXCEP:
+        icode = OP_NOP;
+        break;
     }
 
+    writeWire("m_icode", icode);
     writeWire("W_icode", icode);
     writeWire("W_dstE", dstE);
     writeWire("W_valE", valE);
@@ -78,4 +97,6 @@ function cycle()
 
 function control()
 {
+    if (readForwardingWire("m_icode") == OP_EXCEP)
+        bubble();
 }

@@ -178,6 +178,10 @@ VMWorker::VMWorker(int id, const QString &fileName)
     for (int i = 0; i < FUN_JMP_CNT; i++)
         global.setProperty("FUN_" + funJmpNames[i].toUpper(), i);
 
+    /* exceptions */
+    for (int i = 0; i < EXCEP_CNT; i++)
+        global.setProperty("EXCEP_" + exceptionNames[i].toUpper(), i);
+
     /* registers */
     for (int i = 0; i < REG_CNT; i++)
         global.setProperty("REG_" + registerNames[i].toUpper(), i);
