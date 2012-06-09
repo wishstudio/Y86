@@ -17,3 +17,5 @@
 	cmpl	%ebx, %eax
 	; expected result
 	; CF, ZF are set
+
+	halt

@@ -9,4 +9,6 @@
 	popl	%ebx
 	popl	%eax
 
+	halt
+
 	.stack	0x20

@@ -26,3 +26,5 @@ data3:	.dd data0, data2
 	; fun stuff: indirect addressing
 	mrmovl	4(%eax), %ecx
 	mrmovl	0(%ecx), %edx
+
+	halt

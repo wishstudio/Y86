@@ -7,4 +7,6 @@
 	popl	%edx
 	rrmovl	%edx, %ecx
 
+	halt
+
 	.stack	0x20

@@ -8,14 +8,7 @@ itable:	.dd	EXCEP, 0, 0, 0, 0, 0, 0, 0
 	irmovl	$10, %eax
 	irmovl	$0, %ebx
 	divl	%ebx, %eax
-	nop
-	nop
-	nop
-	nop
-	nop
+	halt
 
 EXCEP:	nop
-	nop
-	nop
-	nop
-	nop
+	halt

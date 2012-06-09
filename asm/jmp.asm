@@ -24,6 +24,6 @@ l2:	cmpl	%eax, %eax
 	je	l3
 	jmp	bad
 
-l3:	nop ; good
+l3:	halt ; good
 
-bad:	; nothing
+bad:	halt

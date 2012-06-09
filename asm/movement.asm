@@ -7,3 +7,4 @@
 	irmovl	$0x30, %ebx
 	rrmovl	%ebx, %esi
 	rrmovl	%eax, %ebx
+	halt
