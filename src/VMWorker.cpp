@@ -84,11 +84,39 @@ static QScriptValue writeRegister(QScriptContext *context, QScriptEngine *engine
     return engine->undefinedValue();
 }
 
+static QScriptValue canReadMemoryChar(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return VM::memory()->canReadChar(context->argument(0).toInt32());
+}
+
+static QScriptValue canExecuteMemoryChar(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return VM::memory()->canExecuteChar(context->argument(0).toInt32());
+}
+
 static QScriptValue readMemoryChar(QScriptContext *context, QScriptEngine *engine)
 {
     if (context->argumentCount() != 1)
         return engine->undefinedValue();
     return VM::memory()->readChar(context->argument(0).toInt32());
+}
+
+static QScriptValue canReadMemoryInt(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return VM::memory()->canReadInt(context->argument(0).toInt32());
+}
+
+static QScriptValue canExecuteMemoryInt(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 1)
+        return engine->undefinedValue();
+    return VM::memory()->canExecuteInt(context->argument(0).toInt32());
 }
 
 static QScriptValue readMemoryInt(QScriptContext *context, QScriptEngine *engine)
@@ -139,6 +167,15 @@ static QScriptValue stall(QScriptContext *context, QScriptEngine *engine)
     return engine->undefinedValue();
 }
 
+/* halt cpu */
+static QScriptValue halt(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 0)
+        return engine->undefinedValue();
+    VM::haltVM();
+    return engine->undefinedValue();
+}
+
 VMWorker::VMWorker(int id, const QString &fileName)
 {
     this->id = id;
@@ -159,12 +196,17 @@ VMWorker::VMWorker(int id, const QString &fileName)
     global.setProperty("writeWire", engine->newFunction(writeWire));
     global.setProperty("readRegister", engine->newFunction(readRegister));
     global.setProperty("writeRegister", engine->newFunction(writeRegister));
+    global.setProperty("canReadMemoryChar", engine->newFunction(canReadMemoryChar));
+    global.setProperty("canExecuteMemoryChar", engine->newFunction(canExecuteMemoryChar));
     global.setProperty("readMemoryChar", engine->newFunction(readMemoryChar));
+    global.setProperty("canReadMemoryInt", engine->newFunction(canReadMemoryInt));
+    global.setProperty("canExecuteMemoryInt", engine->newFunction(canExecuteMemoryInt));
     global.setProperty("readMemoryInt", engine->newFunction(readMemoryInt));
     global.setProperty("writeMemoryInt", engine->newFunction(writeMemoryInt));
     global.setProperty("clearAction", engine->newFunction(clearAction));
     global.setProperty("addAction", engine->newFunction(addAction));
     global.setProperty("stall", engine->newFunction(stall));
+    global.setProperty("halt", engine->newFunction(halt));
 
     /* instruction */
     for (int i = 0; i < OP_CNT; i++)

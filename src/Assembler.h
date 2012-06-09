@@ -68,7 +68,8 @@ extern QString funOplNames[];
 extern QString funJmpNames[];
 
 #define EXCEP_DIVBZ 0x00
-#define EXCEP_CNT   0x01
+#define EXCEP_MEM   0x01
+#define EXCEP_CNT   0x02
 
 extern QString exceptionNames[];
 

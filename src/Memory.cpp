@@ -30,7 +30,10 @@ Memory::~Memory()
 void Memory::clear()
 {
     mem.clear();
-    attrMask.clear();
+    writeMask.clear();
+    executeMask.clear();
+    currentWriteMask = false;
+    currentExecuteMask = false;
 }
 
 int Memory::addr() const
@@ -42,30 +45,41 @@ void Memory::setOrigin(int origin)
 {
     int oldOrigin = mem.size();
     mem.resize(origin);
-    attrMask.resize(origin / 32 + 1);
+    writeMask.resize(origin / 32 + 1);
+    executeMask.resize(origin / 32 + 1);
     for (int i = oldOrigin; i < origin; i++)
     {
         mem[i] = 0;
-        if (currentAttr)
-            attrMask[i / 32] |= 1 << (i % 32);
+        if (currentWriteMask)
+            writeMask[i / 32] |= 1 << (i % 32 - 1);
         else
-            attrMask[i / 32] &= ~(1 << (i % 32));
+            writeMask[i / 32] &= ~(1 << (i % 32 - 1));
+        if (currentExecuteMask)
+            executeMask[i / 32] |= 1 << (i % 32 - 1);
+        else
+            executeMask[i / 32] &= ~(1 << (i % 32 - 1));
     }
 }
 
-void Memory::setAttr(bool attr)
+void Memory::setAttr(bool canWrite, bool canExecute)
 {
-    currentAttr = attr;
+    currentWriteMask = canWrite;
+    currentExecuteMask = canExecute;
 }
 
 void Memory::putChar(char value)
 {
     mem.push_back(value);
-    attrMask.resize(mem.size() / 32 + 1);
-    if (currentAttr)
-        attrMask[mem.size() / 32] |= 1 << (mem.size() % 32);
+    writeMask.resize(mem.size() / 32 + 1);
+    executeMask.resize(mem.size() / 32 + 1);
+    if (currentWriteMask)
+        writeMask[mem.size() / 32] |= 1 << (mem.size() % 32 - 1);
     else
-        attrMask[mem.size() / 32] &= ~(1 << (mem.size() % 32));
+        writeMask[mem.size() / 32] &= ~(1 << (mem.size() % 32 - 1));
+    if (currentExecuteMask)
+        executeMask[mem.size() / 32] |= 1 << (mem.size() % 32 - 1);
+    else
+        executeMask[mem.size() / 32] &= ~(1 << (mem.size() % 32 - 1));
 }
 
 void Memory::putShort(short value)
@@ -89,6 +103,31 @@ void Memory::patch(int addr, int value)
         mem[addr + i] = p[i];
 }
 
+bool Memory::canReadChar(int addr) const
+{
+    return addr >= 0 && addr < mem.size();
+}
+
+bool Memory::canReadInt(int addr) const
+{
+    return addr >= 0 && addr + 3 < mem.size();
+}
+
+bool Memory::canExecuteChar(int addr) const
+{
+    return canReadChar(addr) && (executeMask[addr / 32] & (1 << (addr % 32)));
+}
+
+bool Memory::canExecuteInt(int addr) const
+{
+    if (!canReadInt(addr))
+        return false;
+    for (int i = 0; i < 4; i++)
+        if (!(executeMask[(i + addr) / 32] & (1 << ((i + addr) % 32))))
+            return false;
+    return true;
+}
+
 char Memory::readChar(int addr) const
 {
     return mem[addr];
@@ -102,7 +141,7 @@ int Memory::readInt(int addr) const
 bool Memory::writeInt(int addr, int value)
 {
     for (int i = 0; i < 4; i++)
-        if (!(attrMask[(i + addr) / 32] & (1 << ((i + addr) % 32))))
+        if (!(writeMask[(i + addr) / 32] & (1 << ((i + addr) % 32))))
             return false;
     *(int *) (mem.data() + addr) = value;
     return true;

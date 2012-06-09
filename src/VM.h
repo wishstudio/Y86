@@ -44,6 +44,7 @@ public:
     static VM *self();
     static CodeListModel *codeListModel();
     static StackListModel *stackListModel();
+    static bool isHalted();
     static VMWorker *worker(int id);
     static int workerAddr(int id);
     static QSemaphore *workerSemaphore(int id);
@@ -58,11 +59,13 @@ public:
     static void step();
     static void startVM();
     static void stopVM();
+    static void haltVM();
 
     void run();
 
 signals:
     void updateDisplay();
+    void halted();
 
 private:
     QSemaphore *m_workerSemaphore[WORKERS_COUNT];
@@ -72,7 +75,7 @@ private:
     Memory *m_memory;
     Register *m_reg;
     Wire *m_wire, *m_nextWire;
-    bool m_stop;
+    bool m_stop, m_halted;
     VMWorker *stageWorkers[WORKERS_COUNT];
     int m_workerAddr[WORKERS_COUNT];
 };

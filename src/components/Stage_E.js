@@ -178,6 +178,8 @@ function control()
         if (readForwardingWire("d_srcA") == E_dstM || readForwardingWire("d_srcB") == E_dstM)
             bubble();
     }
+    else if (readWire("E_icode") == OP_HALT || readWire("M_icode") == OP_HALT || readWire("W_icode") == OP_HALT)
+        bubble();
     else if (readWire("E_icode") == OP_JMP && !readForwardingWire("M_Bch"))
         bubble();
     else if (readForwardingWire("e_icode") == OP_EXCEP || readForwardingWire("m_icode") == OP_EXCEP)

@@ -27,6 +27,16 @@ function outWires()
     return ["F_predPC", "D_icode", "D_ifun", "D_rA", "D_rB", "D_valC", "D_valP", "F_eip", "D_eip"];
 }
 
+function exception(id)
+{
+    clearAction();
+    addAction("exception");
+    writeWire("F_eip", -1);
+    writeWire("D_eip", -1);
+    writeWire("D_icode", OP_EXCEP);
+    writeWire("D_ifun", id);
+}
+
 function cycle()
 {
     var icode, ifun;
@@ -55,6 +65,12 @@ function cycle()
         eip = readWire("W_valM");
     else
         eip = readWire("F_predPC");
+    if (!canExecuteMemoryChar(eip))
+    {
+        exception(EXCEP_MEM);
+        return;
+    }
+
     var a = readMemoryChar(eip);
     icode = (a & 0xF0) >> 4;
     ifun = a & 0x0F;
@@ -81,6 +97,12 @@ function cycle()
     case OP_POPL:
         addAction("rA:rB <- M1[%eip + 1]");
         addAction("valP <- %eip + 2");
+
+        if (!canExecuteMemoryChar(eip + 1))
+        {
+            exception(EXCEP_MEM);
+            return;
+        }
         a = readMemoryChar(eip + 1);
         writeWire("D_rA", (a & 0xF0) >> 4);
         writeWire("D_rB", a & 0x0F);
@@ -94,6 +116,12 @@ function cycle()
         addAction("rA:rB <- M1[%eip + 1]");
         addAction("valC <- M4[%eip + 2]");
         addAction("valP <- %eip + 6");
+
+        if (!canExecuteMemoryChar(eip + 1) || !canExecuteMemoryInt(eip + 2))
+        {
+            exception(EXCEP_MEM);
+            return;
+        }
         a = readMemoryChar(eip + 1);
         writeWire("D_rA", (a & 0xF0) >> 4);
         writeWire("D_rB", a & 0x0F);
@@ -106,6 +134,12 @@ function cycle()
     case OP_CALL:
         addAction("valC <- M4[%eip + 1]");
         addAction("valP <- %eip + 5");
+
+        if (!canExecuteMemoryInt(eip + 1))
+        {
+            exception(EXCEP_MEM);
+            return;
+        }
         var valC = readMemoryInt(eip + 1);
         writeWire("D_valC", valC);
         writeWire("D_valP", eip + 5);
@@ -113,6 +147,11 @@ function cycle()
         break;
 
     case OP_LIDT:
+        if (!canExecuteMemoryInt(eip + 1))
+        {
+            exception(EXCEP_MEM);
+            return;
+        }
         addAction("valP <- %eip + 5");
         writeWire("D_valC", readMemoryInt(eip + 1));
         writeWire("D_valP", eip + 5);
@@ -129,6 +168,8 @@ function control()
         if (readForwardingWire("d_srcA") == E_dstM || readForwardingWire("d_srcB") == E_dstM)
             stall();
     }
+    else if (readWire("D_icode") == OP_HALT || readWire("E_icode") == OP_HALT || readWire("M_icode") == OP_HALT || readWire("W_icode") == OP_HALT)
+        stall();
     else if (readWire("D_icode") == OP_RET || readWire("E_icode") == OP_RET || readWire("M_icode") == OP_RET)
         stall();
     else if (readWire("D_icode") == OP_INT || readWire("E_icode") == OP_INT || readWire("M_icode") == OP_INT)

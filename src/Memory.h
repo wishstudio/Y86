@@ -33,21 +33,26 @@ public:
     /* For use with the assembler */
     int addr() const;
     void setOrigin(int origin);
-    void setAttr(bool attr);
+    void setAttr(bool canWrite, bool canExecute);
     void putChar(char value);
     void putShort(short value);
     void put(int value);
     void patch(int addr, int value);
 
     /* For use with the VM */
+    bool canReadChar(int addr) const;
+    bool canReadInt(int addr) const;
+    bool canExecuteChar(int addr) const;
+    bool canExecuteInt(int addr) const;
     char readChar(int addr) const;
     int readInt(int addr) const;
     bool writeInt(int addr, int value);
 
 private:
     QVector<char> mem;
-    QVector<int> attrMask;
-    int currentAttr;
+    QVector<int> writeMask;
+    QVector<int> executeMask;
+    bool currentWriteMask, currentExecuteMask;
 };
 
 #endif

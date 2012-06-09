@@ -191,6 +191,8 @@ function control()
     }
     else if (readWire("E_icode") == OP_JMP && !readForwardingWire("M_Bch"))
         bubble();
+    else if (readWire("D_icode") == OP_HALT || readWire("E_icode") == OP_HALT || readWire("M_icode") == OP_HALT || readWire("W_icode") == OP_HALT)
+        bubble();
     else if (readWire("D_icode") == OP_RET || readWire("E_icode") == OP_RET || readWire("M_icode") == OP_RET)
         bubble();
     else if (readWire("D_icode") == OP_INT || readWire("E_icode") == OP_INT || readWire("M_icode") == OP_INT)

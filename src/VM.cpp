@@ -50,6 +50,7 @@ VM::VM()
     for (int i = 0; i < WORKERS_COUNT; i++)
         m_workerSemaphore[i] = new QSemaphore();
     m_monitorSemaphore = new QSemaphore();
+    m_halted = true;
 }
 
 VM::~VM()
@@ -104,6 +105,11 @@ CodeListModel *VM::codeListModel()
 StackListModel *VM::stackListModel()
 {
     return d()->m_stackListModel;
+}
+
+bool VM::isHalted()
+{
+    return d()->m_halted;
 }
 
 Memory *VM::memory()
@@ -177,6 +183,12 @@ void VM::stopVM()
     d()->m_stop = true;
 }
 
+void VM::haltVM()
+{
+    d()->m_stop = true;
+    d()->m_halted = true;
+}
+
 void VM::run()
 {
     m_nextWire->clearState();
@@ -210,4 +222,6 @@ void VM::run()
         for (int i = 0; i < WORKERS_COUNT; i++)
             m_workerSemaphore[i]->release();
     }
+    if (m_halted)
+        emit halted();
 }

@@ -30,7 +30,7 @@
 QString opNames[] = {"nop", "halt", "rrmovl", "irmovl", "rmmovl", "mrmovl", "opl", "jmp", "call", "ret", "pushl", "popl", "lidt", "int", "excep"};
 QString funOplNames[] = {"addl", "subl", "cmpl", "mull", "divl", "modl", "andl", "orl", "xorl"};
 QString funJmpNames[] = {"jmp", "jle", "jl", "je", "jne", "jge", "jg"};
-QString exceptionNames[] = {"divbz"};
+QString exceptionNames[] = {"divbz", "mem"};
 QString registerNames[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp", "idtr", "none"};
 QString eflagsNames[] = {"cf", "zf", "sf", "of"};
 
@@ -268,17 +268,17 @@ static void compile()
             {
                 if (startEIP == -1)
                     startEIP = memory->addr();
-                memory->setAttr(false);
+                memory->setAttr(false, true);
                 continue;
             }
             else if (label == "rodata")
             {
-                memory->setAttr(false);
+                memory->setAttr(false, false);
                 continue;
             }
             else if (label == "data")
             {
-                memory->setAttr(true);
+                memory->setAttr(true, false);
                 continue;
             }
             else if (label == "stack")
@@ -502,7 +502,7 @@ void Assembler::compileFile(const QString &fileName, Memory *memory)
     ::code.push_back(lastLine);
     /* allocate stack space */
     ::startStack = memory->addr();
-    memory->setAttr(true);
+    memory->setAttr(true, false);
     memory->setOrigin(memory->addr() + stackSize);
 }
 

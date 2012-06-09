@@ -37,6 +37,7 @@ private slots:
     void openFile();
     void start();
     void step();
+    //void halted();
 
 private:
     RegisterViewer *registerViewer;

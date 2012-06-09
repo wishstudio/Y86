@@ -97,6 +97,8 @@ function cycle()
 
 function control()
 {
-    if (readForwardingWire("m_icode") == OP_EXCEP)
+    if (readWire("M_icode") == OP_HALT || readWire("W_icode") == OP_HALT)
+        bubble();
+    else if (readForwardingWire("m_icode") == OP_EXCEP)
         bubble();
 }

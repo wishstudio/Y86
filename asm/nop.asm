@@ -4,3 +4,4 @@
 	nop
 	nop
 	nop
+	halt
