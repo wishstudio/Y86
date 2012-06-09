@@ -30,8 +30,8 @@
 QString opNames[] = {"nop", "halt", "rrmovl", "irmovl", "rmmovl", "mrmovl", "opl", "jmp", "call", "ret", "pushl", "popl", "lidt", "int", "excep"};
 QString funOplNames[] = {"addl", "subl", "cmpl", "mull", "divl", "modl", "andl", "orl", "xorl"};
 QString funJmpNames[] = {"jmp", "jle", "jl", "je", "jne", "jge", "jg"};
-QString exceptionNames[] = {"divbz", "mem"};
-QString registerNames[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp", "idtr", "none"};
+QString exceptionNames[] = {"divbz", "mem", "op", "reg", "dbl"};
+QString registerNames[] = {"eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp", "none", "idtr", "eflags"};
 QString eflagsNames[] = {"cf", "zf", "sf", "of"};
 
 static enum tokenType {tkEOF, tkComma, tkColon, tkDot, tkRegister, tkMemory, tkNumber, tkLabel, tkLP, tkRP} tt;
@@ -141,8 +141,6 @@ static void getToken()
             if (ch == 'x' || ch == 'X')
             {
                 getChar();
-                if (!isdigit(ch))
-                    error("Number expected after 0x.");
                 base = 16;
             }
             else if (isdigit(ch))
@@ -159,6 +157,8 @@ static void getToken()
             token = token + ch;
             getChar();
         }
+        if (token.isEmpty())
+            error("Number expected.");
         tn = token.toInt(NULL, base);
     }
     else
@@ -228,6 +228,11 @@ static void parseMemoryRef(int &reg, QString &label, int &imm)
         label = token;
         getToken();
     }
+    else if (tt == tkLP)
+    {
+        imm = 0;
+        label = QString();
+    }
     else
         error("Memory reference expected.");
     if (tt == tkLP)
@@ -295,13 +300,14 @@ static void compile()
             }
             else if (label == "db" || label == "dw" || label == "dd")
             {
+                QString dtype = label;
                 for (;;)
                 {
                     if (tt == tkNumber)
                     {
-                        if (label == "db")
+                        if (dtype == "db")
                             memory->putChar(tn);
-                        else if (label == "dw")
+                        else if (dtype == "dw")
                             memory->putShort(tn);
                         else
                             memory->put(tn);
@@ -428,7 +434,7 @@ static void compile()
                 else if (tt == tkLabel)
                     putAddr(token);
                 else
-                    error("Expected immediate value.");
+                    error("Expected immediate memory address.");
                 getToken();
             }
             else

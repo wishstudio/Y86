@@ -40,10 +40,21 @@ function bubble()
     writeWire("M_dstM", REG_NONE);
 }
 
+function exception(id)
+{
+    clearAction();
+    addAction("exception");
+    writeWire("m_icode", OP_EXCEP);
+    writeWire("W_eip", -1);
+    writeWire("W_icode", OP_EXCEP);
+    writeWire("W_ifun", id);
+}
+
 function cycle()
 {
     writeWire("W_eip", readWire("M_eip"));
     var icode = readWire("M_icode");
+    var ifun = readWire("M_ifun");
     var valP = readWire("M_valP");
     var dstE = readWire("M_dstE");
     var valA = readWire("M_valA");
@@ -54,32 +65,62 @@ function cycle()
     {
     case OP_RMMOVL:
         addAction("M4[valE] <- valA");
-        writeMemoryInt(valE, valA);
+        if (!writeMemoryInt(valE, valA))
+        {
+            exception(EXCEP_MEM);
+            return;
+        }
         break;
 
     case OP_MRMOVL:
     case OP_INT:
         addAction("valM <- M4[valE]");
+        if (!canReadMemoryInt(valE))
+        {
+            if (icode == OP_INT)
+                exception(EXCEP_DBL);
+            else
+                exception(EXCEP_MEM);
+            return;
+        }
         writeWire("W_valM", readMemoryInt(valE));
         break;
 
     case OP_CALL:
         addAction("M4[valE] <- valP");
-        writeMemoryInt(valE, valP);
+        if (!writeMemoryInt(valE, valP))
+        {
+            exception(EXCEP_MEM);
+            return;
+        }
         break;
 
     case OP_RET:
         addAction("valM <- M4[valA]");
+        if (!canReadMemoryInt(valA))
+        {
+            exception(EXCEP_MEM);
+            return;
+        }
         writeWire("W_valM", readMemoryInt(valA));
         break;
 
     case OP_PUSHL:
         addAction("M4[valE] <- valA");
-        writeMemoryInt(valE, valA);
+        if (!writeMemoryInt(valE, valA))
+        {
+            exception(EXCEP_MEM);
+            return;
+        }
         break;
 
     case OP_POPL:
         addAction("valM <- M4[valA]");
+        if (!canReadMemoryInt(valA))
+        {
+            exception(EXCEP_MEM);
+            return;
+        }
         writeWire("W_valM", readMemoryInt(valA));
         break;
 
@@ -90,6 +131,7 @@ function cycle()
 
     writeWire("m_icode", icode);
     writeWire("W_icode", icode);
+    writeWire("W_ifun", ifun);
     writeWire("W_dstE", dstE);
     writeWire("W_valE", valE);
     writeWire("W_dstM", dstM);

@@ -69,7 +69,10 @@ extern QString funJmpNames[];
 
 #define EXCEP_DIVBZ 0x00
 #define EXCEP_MEM   0x01
-#define EXCEP_CNT   0x02
+#define EXCEP_OP    0x02
+#define EXCEP_REG   0x03
+#define EXCEP_DBL   0x04
+#define EXCEP_CNT   0x05
 
 extern QString exceptionNames[];
 
@@ -81,10 +84,10 @@ extern QString exceptionNames[];
 #define REG_EDI     0x05
 #define REG_ESP     0x06
 #define REG_EBP     0x07
-#define REG_IDTR    0x08
-#define REG_NONE    0x09
-#define REG_EFLAGS  0x09
-#define REG_CNT     0x0A
+#define REG_NONE    0x08
+#define REG_IDTR    0x09
+#define REG_EFLAGS  0x0A
+#define REG_CNT     0x0B
 
 extern QString registerNames[];
 

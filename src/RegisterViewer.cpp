@@ -27,22 +27,20 @@ RegisterViewer::RegisterViewer(QWidget *parent)
     : QWidget(parent)
 {
     QFormLayout *layout = new QFormLayout(this);
-    for (int i = 0; i < 9; i++)
+    for (int i = 0; i < REG_CNT; i++)
     {
+        if (i == REG_NONE)
+            continue;
         registerLabels[i] = new HexWidget(this);
         registerLabels[i]->setBits(8);
         layout->addRow(QString("%%1: ").arg(registerNames[i]), registerLabels[i]);
     }
-    eflagsLabel = new HexWidget(this);
-    eflagsLabel->setBits(8);
-    layout->addRow("eflags: ", eflagsLabel);
-
     setLayout(layout);
 }
 
 void RegisterViewer::updateDisplay()
 {
-    for (int i = 0; i < 9; i++)
-        registerLabels[i]->setNumber(VM::reg()->readRegister(i));
-    eflagsLabel->setNumber(VM::reg()->readRegister(REG_EFLAGS));
+    for (int i = 0; i < REG_CNT; i++)
+        if (i != REG_NONE)
+            registerLabels[i]->setNumber(VM::reg()->readRegister(i));
 }

@@ -38,6 +38,16 @@ function bubble()
     writeWire("D_valC", 0);
 }
 
+function exception(id)
+{
+    clearAction();
+    addAction("exception");
+    writeWire("d_icode", OP_EXCEP);
+    writeWire("E_eip", -1);
+    writeWire("E_icode", OP_EXCEP);
+    writeWire("E_ifun", id);
+}
+
 function fetchRegisterWithForwarding(reg)
 {
     if (reg == readWire("E_dstE")) return readForwardingWire("M_valE");
@@ -64,24 +74,46 @@ function cycle()
     {
     case OP_RRMOVL:
         addAction("valA <- R[rA]");
+        if (rA >= REG_NONE)
+        {
+            exception(EXCEP_REG);
+            return;
+        }
         srcA = rA;
         break;
 
     case OP_RMMOVL:
         addAction("valA <- R[rA]");
         addAction("valB <- R[rB]");
+        /* rB == REG_NONE is acceptable */
+        if (rA >= REG_NONE || rB > REG_NONE)
+        {
+            exception(EXCEP_REG);
+            return;
+        }
         srcA = rA;
         srcB = rB;
         break;
 
     case OP_MRMOVL:
         addAction("valB <- R[rB]");
+        /* rB == REG_NONE is acceptable */
+        if (rB > REG_NONE)
+        {
+            exception(EXCEP_REG);
+            return;
+        }
         srcB = rB;
         break;
 
     case OP_OPL:
         addAction("valA <- R[rA]");
         addAction("valB <- R[rB]");
+        if (rA >= REG_NONE || rB >= REG_NONE)
+        {
+            exception(EXCEP_REG);
+            return;
+        }
         srcA = rA;
         srcB = rB;
         break;
@@ -100,6 +132,11 @@ function cycle()
     case OP_PUSHL:
         addAction("valA <- R[rA]");
         addAction("valB <- R[%esp]");
+        if (rA >= REG_NONE)
+        {
+            exception(EXCEP_REG);
+            return;
+        }
         srcA = rA;
         srcB = REG_ESP;
         break;
@@ -133,17 +170,34 @@ function cycle()
     switch (icode)
     {
     case OP_MRMOVL:
+        if (rA >= REG_NONE)
+        {
+            exception(EXCEP_REG);
+            return;
+        }
         dstM = rA;
         break;
 
     case OP_RRMOVL:
     case OP_IRMOVL:
+        if (rB >= REG_NONE)
+        {
+            exception(EXCEP_REG);
+            return;
+        }
         dstE = rB;
         break;
 
     case OP_OPL:
         if (ifun != FUN_CMPL)
+        {
+            if (rB >= REG_NONE)
+            {
+                exception(EXCEP_REG);
+                return;
+            }
             dstE = rB;
+        }
         break;
 
     case OP_CALL:
@@ -160,6 +214,11 @@ function cycle()
 
     case OP_POPL:
         dstE = REG_ESP;
+        if (rA >= REG_NONE)
+        {
+            exception(EXCEP_REG);
+            return;
+        }
         dstM = rA;
         break;
 

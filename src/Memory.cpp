@@ -51,13 +51,13 @@ void Memory::setOrigin(int origin)
     {
         mem[i] = 0;
         if (currentWriteMask)
-            writeMask[i / 32] |= 1 << (i % 32 - 1);
+            writeMask[i / 32] |= 1 << (i % 32);
         else
-            writeMask[i / 32] &= ~(1 << (i % 32 - 1));
+            writeMask[i / 32] &= ~(1 << (i % 32));
         if (currentExecuteMask)
-            executeMask[i / 32] |= 1 << (i % 32 - 1);
+            executeMask[i / 32] |= 1 << (i % 32);
         else
-            executeMask[i / 32] &= ~(1 << (i % 32 - 1));
+            executeMask[i / 32] &= ~(1 << (i % 32));
     }
 }
 
@@ -69,17 +69,17 @@ void Memory::setAttr(bool canWrite, bool canExecute)
 
 void Memory::putChar(char value)
 {
-    mem.push_back(value);
-    writeMask.resize(mem.size() / 32 + 1);
-    executeMask.resize(mem.size() / 32 + 1);
+    writeMask.resize((mem.size() + 1) / 32 + 1);
+    executeMask.resize((mem.size() + 1) / 32 + 1);
     if (currentWriteMask)
-        writeMask[mem.size() / 32] |= 1 << (mem.size() % 32 - 1);
+        writeMask[mem.size() / 32] |= 1 << (mem.size() % 32);
     else
-        writeMask[mem.size() / 32] &= ~(1 << (mem.size() % 32 - 1));
+        writeMask[mem.size() / 32] &= ~(1 << (mem.size() % 32));
     if (currentExecuteMask)
-        executeMask[mem.size() / 32] |= 1 << (mem.size() % 32 - 1);
+        executeMask[mem.size() / 32] |= 1 << (mem.size() % 32);
     else
-        executeMask[mem.size() / 32] &= ~(1 << (mem.size() % 32 - 1));
+        executeMask[mem.size() / 32] &= ~(1 << (mem.size() % 32));
+    mem.push_back(value);
 }
 
 void Memory::putShort(short value)

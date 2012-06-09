@@ -229,7 +229,6 @@ VMWorker::VMWorker(int id, const QString &fileName)
         global.setProperty("REG_" + registerNames[i].toUpper(), i);
 
     /* eflags */
-    global.setProperty("REG_EFLAGS", REG_NONE);
     for (int i = 0; i < EFLAGS_CNT; i++)
         global.setProperty("EFLAGS_" + eflagsNames[i].toUpper(), i);
     engine->evaluate(program);

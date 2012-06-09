@@ -162,6 +162,7 @@ function cycle()
 
     writeWire("e_icode", icode);
     writeWire("M_icode", icode);
+    writeWire("M_ifun", ifun);
     writeWire("M_valP", valP);
     writeWire("M_valA", valA);
     writeWire("M_dstE", dstE);

@@ -31,7 +31,6 @@ function exception(id)
 {
     clearAction();
     addAction("exception");
-    writeWire("F_eip", -1);
     writeWire("D_eip", -1);
     writeWire("D_icode", OP_EXCEP);
     writeWire("D_ifun", id);
@@ -44,12 +43,24 @@ function cycle()
     {
         icode = OP_INT;
         /* the order matters */
-        if (readWire("M_icode") == OP_EXCEP)
+        if (readWire("W_icode") == OP_EXCEP)
+            ifun = readWire("W_ifun");
+        else if (readWire("M_icode") == OP_EXCEP)
             ifun = readWire("M_ifun");
         else if (readWire("E_icode") == OP_EXCEP)
             ifun = readWire("E_ifun");
         else if (readWire("D_icode") == OP_EXCEP)
             ifun = readWire("D_ifun");
+        /* when a double fault occurs, just shut down the cpu */
+        if (ifun == EXCEP_DBL)
+        {
+            writeWire("D_eip", -1);
+            writeWire("D_icode", OP_HALT);
+            writeWire("D_ifun", 0);
+            writeWire("F_eip", -1);
+            writeWire("F_predPC", readWire("F_predPC"));
+            return;
+        }
         writeWire("D_eip", -1);
         writeWire("D_icode", icode);
         writeWire("D_ifun", ifun);
@@ -156,6 +167,10 @@ function cycle()
         writeWire("D_valC", readMemoryInt(eip + 1));
         writeWire("D_valP", eip + 5);
         writeWire("F_predPC", eip + 5);
+        break;
+
+    default:
+        exception(EXCEP_OP);
         break;
     }
 }
