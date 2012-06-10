@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     VM::init();
     connect(VM::self(), SIGNAL(updateDisplay()), SLOT(updateDisplay()));
+    connect(VM::self(), SIGNAL(finished()), SLOT(stopped()));
 
     QGroupBox *controlGroup = new QGroupBox(this);
     controlGroup->setTitle("Controls");
@@ -133,7 +134,13 @@ void MainWindow::openFile()
 
 void MainWindow::start()
 {
-    VM::startVM();
+    if (VM::self()->isRunning())
+        VM::stopVM();
+    else
+    {
+        VM::startVM();
+        startButton->setText("Pause");
+    }
 }
 
 void MainWindow::step()
@@ -159,7 +166,6 @@ void MainWindow::changeFrequency()
 
 void MainWindow::updateDisplay()
 {
-    startButton->setText("Pause");
     startButton->setDisabled(VM::isHalted());
     stepButton->setDisabled(VM::isHalted());
     resetButton->setDisabled(fileName.isEmpty());
@@ -169,4 +175,5 @@ void MainWindow::updateDisplay()
 
 void MainWindow::stopped()
 {
+    startButton->setText("Start");
 }
