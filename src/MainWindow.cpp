@@ -28,7 +28,7 @@
 
 #include "MainWindow.h"
 
-int frequencies[FREQUENCY_COUNT] = {1, 2, 5, 0};
+int frequencies[FREQUENCY_COUNT] = {1, 5, 20, 0};
 
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent)
