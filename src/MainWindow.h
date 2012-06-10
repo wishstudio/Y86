@@ -20,6 +20,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#define FREQUENCY_COUNT     4
+
+#include <QLabel>
+#include <QPushButton>
+#include <QRadioButton>
 #include <QWidget>
 
 #include "RegisterViewer.h"
@@ -37,11 +42,17 @@ private slots:
     void openFile();
     void start();
     void step();
-    //void halted();
+    void reset();
+    void changeFrequency();
+    void updateDisplay();
 
 private:
+    QPushButton *startButton, *stepButton, *resetButton;
+    QRadioButton *frequencyButton[FREQUENCY_COUNT];
     RegisterViewer *registerViewer;
     StageViewer *stageViewer[WORKERS_COUNT];
+    QLabel *fileNameLabel;
+    QString fileName;
 };
 
 #endif

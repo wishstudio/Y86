@@ -175,6 +175,7 @@ void VM::loadObject(const QString &fileName)
         d()->m_workerAddr[i] = -2;
         d()->stageWorkers[i]->clearWorkerActions();
     }
+    d()->m_halted = false;
     emit d()->updateDisplay();
 }
 
@@ -200,6 +201,11 @@ void VM::haltVM()
 {
     d()->m_stop = true;
     d()->m_halted = true;
+}
+
+void VM::setFrequency(int freq)
+{
+    d()->m_frequency = freq;
 }
 
 void VM::run()
@@ -232,9 +238,9 @@ void VM::run()
             }
             break;
         }
+        if (m_frequency)
+            msleep(1000 / m_frequency);
         for (int i = 0; i < WORKERS_COUNT; i++)
             m_workerSemaphore[i]->release();
     }
-    if (m_halted)
-        emit halted();
 }

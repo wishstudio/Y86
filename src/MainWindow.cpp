@@ -17,50 +17,82 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <QButtonGroup>
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QTreeView>
 
 #include "MainWindow.h"
+
+int frequencies[FREQUENCY_COUNT] = {1, 2, 5, 0};
 
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent)
 {
     VM::init();
+    connect(VM::self(), SIGNAL(updateDisplay()), SLOT(updateDisplay()));
 
-    QPushButton *openFileButton = new QPushButton("Open assembly...", this);
+    QGroupBox *controlGroup = new QGroupBox(this);
+    controlGroup->setTitle("Controls");
+    QGridLayout *controlLayout = new QGridLayout();
+
+    QPushButton *openFileButton = new QPushButton("Open...", this);
     connect(openFileButton, SIGNAL(clicked()), SLOT(openFile()));
-    QPushButton *startButton = new QPushButton("Start", this);
+    fileNameLabel = new QLabel(this);
+    QButtonGroup *frequencyGroup = new QButtonGroup(this);
+    QHBoxLayout *frequencyLayout = new QHBoxLayout();
+    frequencyLayout->setSpacing(0);
+    for (int i = 0; i < FREQUENCY_COUNT; i++)
+    {
+        frequencyButton[i] = new QRadioButton(this);
+        if (frequencies[i])
+            frequencyButton[i]->setText(QString("%1Hz").arg(frequencies[i]));
+        else
+            frequencyButton[i]->setText("No Limit");
+        connect(frequencyButton[i], SIGNAL(clicked()), SLOT(changeFrequency()));
+        frequencyGroup->addButton(frequencyButton[i]);
+        frequencyLayout->addWidget(frequencyButton[i]);
+    }
+    frequencyButton[0]->setChecked(true);
+    VM::setFrequency(1);
+    startButton = new QPushButton("Start", this);
     connect(startButton, SIGNAL(clicked()), SLOT(start()));
-    QPushButton *stepButton = new QPushButton("Step", this);
+    stepButton = new QPushButton("Step", this);
     connect(stepButton, SIGNAL(clicked()), SLOT(step()));
-    QHBoxLayout *toolsLayout = new QHBoxLayout();
-    toolsLayout->addWidget(openFileButton);
-    toolsLayout->addWidget(startButton);
-    toolsLayout->addWidget(stepButton);
+    resetButton = new QPushButton("Reset", this);
+    connect(resetButton, SIGNAL(clicked()), SLOT(reset()));
+
+    controlLayout->addWidget(openFileButton, 0, 0);
+    controlLayout->addWidget(fileNameLabel, 0, 1);
+    controlLayout->addLayout(frequencyLayout, 1, 0, 1, 3);
+    controlLayout->addWidget(startButton, 2, 0);
+    controlLayout->addWidget(stepButton, 2, 1);
+    controlLayout->addWidget(resetButton, 2, 2);
+    controlGroup->setLayout(controlLayout);
 
     QGridLayout *layout = new QGridLayout(this);
     layout->setHorizontalSpacing(10);
     layout->setVerticalSpacing(5);
-    layout->addLayout(toolsLayout, 0, 0);
+    layout->addWidget(controlGroup, 0, 2, Qt::AlignLeft);
 
     QTreeView *memoryViewer = new QTreeView(this);
     memoryViewer->setModel(VM::codeListModel());
     memoryViewer->setColumnWidth(0, 100);
     memoryViewer->setColumnWidth(1, 200);
     memoryViewer->setColumnWidth(2, 40);
-    layout->addWidget(memoryViewer, 1, 0, 4, 1);
+    layout->addWidget(memoryViewer, 0, 0, 4, 1);
 
     QTreeView *stackViewer = new QTreeView(this);
     stackViewer->setModel(VM::stackListModel());
     stackViewer->setFixedWidth(220);
-    layout->addWidget(stackViewer, 1, 1);
+    layout->addWidget(stackViewer, 0, 1);
 
     registerViewer = new RegisterViewer(this);
     connect(VM::self(), SIGNAL(updateDisplay()), registerViewer, SLOT(updateDisplay()));
-    layout->addWidget(registerViewer, 2, 1, Qt::AlignLeft);
+    layout->addWidget(registerViewer, 1, 1, 1, 2);
 
     QGroupBox *stageGroup = new QGroupBox(this);
     stageGroup->setTitle("Stages");
@@ -73,7 +105,9 @@ MainWindow::MainWindow(QWidget *parent)
         stageLayout->addWidget(stageViewer[i], i, 0, Qt::AlignLeft);
     }
     stageGroup->setLayout(stageLayout);
-    layout->addWidget(stageGroup, 3, 1, Qt::AlignLeft);
+    layout->addWidget(stageGroup, 2, 1, 1, 2);
+
+    updateDisplay();
 
     setLayout(layout);
     setMinimumSize(1250, 700);
@@ -83,14 +117,44 @@ void MainWindow::openFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this, "Open assembly...", QString(), "All files (*.*)");
     if (QFile::exists(fileName))
+    {
+        this->fileName = fileName;
         VM::loadObject(fileName);
+    }
 }
 
 void MainWindow::start()
 {
+    VM::startVM();
 }
 
 void MainWindow::step()
 {
     VM::step();
+}
+
+void MainWindow::reset()
+{
+    VM::loadObject(fileName);
+}
+
+void MainWindow::changeFrequency()
+{
+    for (int i = 0; i < FREQUENCY_COUNT; i++)
+        if (sender() == frequencyButton[i])
+        {
+            VM::setFrequency(frequencies[i]);
+            return;
+        }
+}
+
+void MainWindow::updateDisplay()
+{
+    if (VM::self()->isRunning())
+        startButton->setText("Pause");
+    else
+        startButton->setText("Start");
+    startButton->setDisabled(VM::isHalted());
+    stepButton->setDisabled(VM::isHalted());
+    resetButton->setDisabled(fileName.isEmpty());
 }

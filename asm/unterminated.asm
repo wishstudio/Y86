@@ -1,0 +1,3 @@
+	; unterminated code
+	.text
+	nop

@@ -158,7 +158,7 @@ static void getToken()
             getChar();
         }
         if (token.isEmpty())
-            error("Number expected.");
+            error("Number expected after 0 or 0x tag.");
         tn = token.toInt(NULL, base);
     }
     else

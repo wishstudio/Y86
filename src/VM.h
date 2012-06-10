@@ -61,12 +61,12 @@ public:
     static void startVM();
     static void stopVM();
     static void haltVM();
+    static void setFrequency(int freq);
 
     void run();
 
 signals:
     void updateDisplay();
-    void halted();
 
 private:
     QSemaphore *m_workerSemaphore[WORKERS_COUNT];
@@ -79,6 +79,7 @@ private:
     bool m_stop, m_halted;
     VMWorker *stageWorkers[WORKERS_COUNT];
     int m_workerAddr[WORKERS_COUNT];
+    int m_frequency;
 
     QScriptEngine *m_engine;
 };
