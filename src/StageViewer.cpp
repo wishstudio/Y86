@@ -45,9 +45,11 @@ StageViewer::StageViewer(int id, QWidget *parent)
         label->setFont(font);
         wireLabels[i] = new HexWidget(this);
         wireLabels[i]->setBits(VM::wireBits(omitStageName(inWires.at(i))));
-        layout->addWidget(label, 0, i);
-        layout->addWidget(wireLabels[i], 1, i);
+        layout->addWidget(label, 0, i, Qt::AlignLeft);
+        layout->addWidget(wireLabels[i], 1, i, Qt::AlignLeft);
+        layout->setColumnStretch(i, 0);
     }
+    layout->setColumnStretch(inWires.size() - 1, 1);
 
     QHBoxLayout *actionsLayout = new QHBoxLayout();
     for (int i = 0; i < MAX_ACTIONS; i++)

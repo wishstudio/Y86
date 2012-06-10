@@ -104,13 +104,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     QGroupBox *stageGroup = new QGroupBox(this);
     stageGroup->setTitle("Stages");
-    QGridLayout *stageLayout = new QGridLayout();
-    stageLayout->setVerticalSpacing(0);
+    QVBoxLayout *stageLayout = new QVBoxLayout();
     for (int i = 0; i < WORKERS_COUNT; i++)
     {
         stageViewer[i] = new StageViewer(i, this);
         connect(VM::self(), SIGNAL(updateDisplay()), stageViewer[i], SLOT(updateDisplay()));
-        stageLayout->addWidget(stageViewer[i], i, 0, Qt::AlignLeft);
+        stageLayout->addWidget(stageViewer[i]);
     }
     stageGroup->setLayout(stageLayout);
     layout->addWidget(stageGroup, 2, 1, 1, 2);
