@@ -162,6 +162,7 @@ void VM::loadObject(const QString &fileName)
         d()->m_wire->writeWire(stageNames[i] + "_eip", -2);
     d()->m_wire->writeWire("F_predPC", Assembler::startEIP());
     d()->m_reg->writeRegister(REG_ESP, Assembler::startESP());
+    d()->m_reg->writeRegister(REG_IDTR, 0xFFFF0000);
     /* clear forwarding registers */
     d()->m_wire->writeWire("E_dstE", REG_NONE);
     d()->m_wire->writeWire("M_dstE", REG_NONE);

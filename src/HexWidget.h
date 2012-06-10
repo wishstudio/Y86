@@ -37,7 +37,7 @@ public:
 private:
     QFont font;
     int w, h;
-    int number;
+    unsigned int number;
     int bits;
 };
 

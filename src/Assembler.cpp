@@ -437,6 +437,12 @@ static void compile()
                     error("Expected immediate memory address.");
                 getToken();
             }
+            else if (label == "int")
+            {
+                int t = tn;
+                expectNumber();
+                memory->putChar(PAIR(OP_INT, t));
+            }
             else
             {
                 int fun = -1;
