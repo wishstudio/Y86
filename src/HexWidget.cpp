@@ -28,6 +28,8 @@ HexWidget::HexWidget(QWidget *parent)
     number = 0;
     font = QFont("Monospace");
     font.setStyleHint(QFont::TypeWriter);
+    changed = false;
+    showChanges = false;
 }
 
 void HexWidget::paintEvent(QPaintEvent *)
@@ -39,6 +41,7 @@ void HexWidget::paintEvent(QPaintEvent *)
     QPainter painter(this);
     painter.setFont(font);
     painter.drawRect(0, 0, w - 1, h - 1);
+    painter.setPen(showChanges && changed? Qt::red: Qt::black);
     painter.drawText(3, h - 2, text);
 }
 
@@ -54,8 +57,14 @@ void HexWidget::setBits(int number)
     bits = number;
 }
 
-void HexWidget::setNumber(int number)
+void HexWidget::setNumber(unsigned int number)
 {
+    changed = this->number != number;
     this->number = number;
     emit update();
+}
+
+void HexWidget::setShowChanges(bool showChanges)
+{
+    this->showChanges = showChanges;
 }

@@ -43,6 +43,7 @@ RegisterViewer::RegisterViewer(QWidget *parent)
 
         registerLabels[i] = new HexWidget(this);
         registerLabels[i]->setBits(8);
+        registerLabels[i]->setShowChanges(true);
         layout->addWidget(label, i / 4 * 2, i % 4);
         layout->addWidget(registerLabels[i], i / 4 * 2 + 1, i % 4);
     }
@@ -53,6 +54,7 @@ RegisterViewer::RegisterViewer(QWidget *parent)
 
         registerLabels[REG_IDTR] = new HexWidget(this);
         registerLabels[REG_IDTR]->setBits(8);
+        registerLabels[REG_IDTR]->setShowChanges(true);
         layout->addWidget(label, 0, 4);
         layout->addWidget(registerLabels[REG_IDTR], 1, 4);
     }
@@ -63,6 +65,7 @@ RegisterViewer::RegisterViewer(QWidget *parent)
 
         registerLabels[REG_EFLAGS] = new HexWidget(this);
         registerLabels[REG_EFLAGS]->setBits(8);
+        registerLabels[REG_EFLAGS]->setShowChanges(true);
         layout->addWidget(label, 2, 4);
         layout->addWidget(registerLabels[REG_EFLAGS], 3, 4);
     }

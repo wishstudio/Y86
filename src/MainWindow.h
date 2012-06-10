@@ -45,6 +45,7 @@ private slots:
     void reset();
     void changeFrequency();
     void updateDisplay();
+    void stopped();
 
 private:
     QPushButton *startButton, *stepButton, *resetButton;

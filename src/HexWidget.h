@@ -32,10 +32,12 @@ public:
 
     void paintEvent(QPaintEvent *);
     void setBits(int number);
-    void setNumber(int number);
+    void setNumber(unsigned int number);
+    void setShowChanges(bool showChanges);
 
 private:
     QFont font;
+    bool changed, showChanges;
     int w, h;
     unsigned int number;
     int bits;

@@ -160,13 +160,14 @@ void MainWindow::changeFrequency()
 
 void MainWindow::updateDisplay()
 {
-    if (VM::self()->isRunning())
-        startButton->setText("Pause");
-    else
-        startButton->setText("Start");
+    startButton->setText("Pause");
     startButton->setDisabled(VM::isHalted());
-    stepButton->setDisabled(VM::self()->isRunning() || VM::isHalted());
+    stepButton->setDisabled(VM::isHalted());
     resetButton->setDisabled(fileName.isEmpty());
     cycleCountLabel->setText(QString("Cycle: %1").arg(VM::cycleCount()));
     instructionCountLabel->setText(QString("Inst: %1").arg(VM::instructionCount()));
+}
+
+void MainWindow::stopped()
+{
 }
