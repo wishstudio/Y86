@@ -25,8 +25,10 @@
 #include "VM.h"
 
 RegisterViewer::RegisterViewer(QWidget *parent)
-    : QWidget(parent)
+    : QGroupBox(parent)
 {
+    setTitle("Registers");
+
     QFont font("Monospace");
     font.setStyleHint(QFont::TypeWriter);
 

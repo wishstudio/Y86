@@ -20,12 +20,12 @@
 #ifndef REGISTERVIEWER_H
 #define REGISTERVIEWER_H
 
-#include <QWidget>
+#include <QGroupBox>
 
 #include "Assembler.h"
 #include "HexWidget.h"
 
-class RegisterViewer: public QWidget
+class RegisterViewer: public QGroupBox
 {
     Q_OBJECT
 

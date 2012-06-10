@@ -18,10 +18,9 @@
  */
 
 #include <QFileDialog>
-#include <QPushButton>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
 #include <QGridLayout>
+#include <QGroupBox>
+#include <QPushButton>
 #include <QTreeView>
 
 #include "MainWindow.h"
@@ -43,8 +42,8 @@ MainWindow::MainWindow(QWidget *parent)
     toolsLayout->addWidget(stepButton);
 
     QGridLayout *layout = new QGridLayout(this);
-    layout->setSpacing(0);
-    layout->setHorizontalSpacing(5);
+    layout->setHorizontalSpacing(10);
+    layout->setVerticalSpacing(5);
     layout->addLayout(toolsLayout, 0, 0);
 
     QTreeView *memoryViewer = new QTreeView(this);
@@ -52,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
     memoryViewer->setColumnWidth(0, 100);
     memoryViewer->setColumnWidth(1, 200);
     memoryViewer->setColumnWidth(2, 40);
-    layout->addWidget(memoryViewer, 1, 0, 3 + WORKERS_COUNT, 1);
+    layout->addWidget(memoryViewer, 1, 0, 4, 1);
 
     QTreeView *stackViewer = new QTreeView(this);
     stackViewer->setModel(VM::stackListModel());
@@ -63,12 +62,18 @@ MainWindow::MainWindow(QWidget *parent)
     connect(VM::self(), SIGNAL(updateDisplay()), registerViewer, SLOT(updateDisplay()));
     layout->addWidget(registerViewer, 2, 1, Qt::AlignLeft);
 
+    QGroupBox *stageGroup = new QGroupBox(this);
+    stageGroup->setTitle("Stages");
+    QGridLayout *stageLayout = new QGridLayout();
+    stageLayout->setVerticalSpacing(0);
     for (int i = 0; i < WORKERS_COUNT; i++)
     {
         stageViewer[i] = new StageViewer(i, this);
         connect(VM::self(), SIGNAL(updateDisplay()), stageViewer[i], SLOT(updateDisplay()));
-        layout->addWidget(stageViewer[i], 3 + i, 1, Qt::AlignLeft);
+        stageLayout->addWidget(stageViewer[i], i, 0, Qt::AlignLeft);
     }
+    stageGroup->setLayout(stageLayout);
+    layout->addWidget(stageGroup, 3, 1, Qt::AlignLeft);
 
     setLayout(layout);
     setMinimumSize(1250, 700);

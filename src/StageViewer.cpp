@@ -35,6 +35,7 @@ StageViewer::StageViewer(int id, QWidget *parent)
     QGridLayout *layout = new QGridLayout(this);
     layout->setVerticalSpacing(0);
     layout->setHorizontalSpacing(5);
+    layout->setMargin(3);
 
     typedef HexWidget *PHexWidget; /* compilation hack */
     wireLabels = new PHexWidget[inWires.size()];
