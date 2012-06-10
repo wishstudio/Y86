@@ -176,6 +176,15 @@ static QScriptValue halt(QScriptContext *context, QScriptEngine *engine)
     return engine->undefinedValue();
 }
 
+/* increase instruction count, used in W */
+static QScriptValue increaseInstructionCount(QScriptContext *context, QScriptEngine *engine)
+{
+    if (context->argumentCount() != 0)
+        return engine->undefinedValue();
+    VM::increaseInstructionCount();
+    return engine->undefinedValue();
+}
+
 VMWorker::VMWorker(int id, const QString &fileName)
 {
     this->id = id;
@@ -207,6 +216,7 @@ VMWorker::VMWorker(int id, const QString &fileName)
     global.setProperty("addAction", engine->newFunction(addAction));
     global.setProperty("stall", engine->newFunction(stall));
     global.setProperty("halt", engine->newFunction(halt));
+    global.setProperty("increaseInstructionCount", engine->newFunction(increaseInstructionCount));
 
     /* instruction */
     for (int i = 0; i < OP_CNT; i++)

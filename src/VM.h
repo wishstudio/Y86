@@ -45,6 +45,9 @@ public:
     static CodeListModel *codeListModel();
     static StackListModel *stackListModel();
     static bool isHalted();
+    static int cycleCount();
+    static int instructionCount();
+    static void increaseInstructionCount();
     static VMWorker *worker(int id);
     static int workerAddr(int id);
     static QSemaphore *workerSemaphore(int id);
@@ -79,7 +82,7 @@ private:
     bool m_stop, m_halted;
     VMWorker *stageWorkers[WORKERS_COUNT];
     int m_workerAddr[WORKERS_COUNT];
-    int m_frequency;
+    int m_frequency, m_cycleCount, m_instructionCount;
 
     QScriptEngine *m_engine;
 };

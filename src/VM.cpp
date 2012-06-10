@@ -51,6 +51,8 @@ VM::VM()
         m_workerSemaphore[i] = new QSemaphore();
     m_monitorSemaphore = new QSemaphore();
     m_halted = true;
+    m_cycleCount = 0;
+    m_instructionCount = 0;
 
     QFile file(":/components/Definitions.js");
     file.open(QIODevice::ReadOnly);
@@ -119,6 +121,21 @@ bool VM::isHalted()
     return d()->m_halted;
 }
 
+int VM::cycleCount()
+{
+    return d()->m_cycleCount;
+}
+
+int VM::instructionCount()
+{
+    return d()->m_instructionCount;
+}
+
+void VM::increaseInstructionCount()
+{
+    d()->m_instructionCount++;
+}
+
 Memory *VM::memory()
 {
     return d()->m_memory;
@@ -176,6 +193,8 @@ void VM::loadObject(const QString &fileName)
         d()->stageWorkers[i]->clearWorkerActions();
     }
     d()->m_halted = false;
+    d()->m_cycleCount = 0;
+    d()->m_instructionCount = 0;
     emit d()->updateDisplay();
 }
 
@@ -225,6 +244,7 @@ void VM::run()
             m_workerAddr[i] = m_wire->readWire(stageNames[i] + "_eip");
         m_wire->copyFrom(m_nextWire);
         m_nextWire->clearState();
+        m_cycleCount++;
         emit updateDisplay();
         if (m_stop)
         {

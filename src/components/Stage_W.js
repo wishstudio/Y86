@@ -60,6 +60,8 @@ function cycle()
         writeRegister(dstM, valM);
         break;
     }
+    if (readWire("W_eip") >= 0)
+        increaseInstructionCount();
 }
 
 function control()

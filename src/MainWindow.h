@@ -52,6 +52,7 @@ private:
     RegisterViewer *registerViewer;
     StageViewer *stageViewer[WORKERS_COUNT];
     QLabel *fileNameLabel;
+    QLabel *cycleCountLabel, *instructionCountLabel;
     QString fileName;
 };
 

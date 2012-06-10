@@ -19,6 +19,7 @@
 
 #include <QButtonGroup>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QPushButton>
@@ -65,12 +66,19 @@ MainWindow::MainWindow(QWidget *parent)
     resetButton = new QPushButton("Reset", this);
     connect(resetButton, SIGNAL(clicked()), SLOT(reset()));
 
+    QHBoxLayout *counterLayout = new QHBoxLayout();
+    cycleCountLabel = new QLabel(this);
+    instructionCountLabel = new QLabel(this);
+    counterLayout->addWidget(cycleCountLabel);
+    counterLayout->addWidget(instructionCountLabel);
+
     controlLayout->addWidget(openFileButton, 0, 0);
-    controlLayout->addWidget(fileNameLabel, 0, 1);
+    controlLayout->addWidget(fileNameLabel, 0, 1, 1, 2);
     controlLayout->addLayout(frequencyLayout, 1, 0, 1, 3);
     controlLayout->addWidget(startButton, 2, 0);
     controlLayout->addWidget(stepButton, 2, 1);
     controlLayout->addWidget(resetButton, 2, 2);
+    controlLayout->addLayout(counterLayout, 3, 0, 1, 3);
     controlGroup->setLayout(controlLayout);
 
     QGridLayout *layout = new QGridLayout(this);
@@ -118,6 +126,7 @@ void MainWindow::openFile()
     QString fileName = QFileDialog::getOpenFileName(this, "Open assembly...", QString(), "All files (*.*)");
     if (QFile::exists(fileName))
     {
+        fileNameLabel->setText(QFileInfo(fileName).baseName());
         this->fileName = fileName;
         VM::loadObject(fileName);
     }
@@ -130,7 +139,8 @@ void MainWindow::start()
 
 void MainWindow::step()
 {
-    VM::step();
+    if (!VM::self()->isRunning())
+        VM::step();
 }
 
 void MainWindow::reset()
@@ -155,6 +165,8 @@ void MainWindow::updateDisplay()
     else
         startButton->setText("Start");
     startButton->setDisabled(VM::isHalted());
-    stepButton->setDisabled(VM::isHalted());
+    stepButton->setDisabled(VM::self()->isRunning() || VM::isHalted());
     resetButton->setDisabled(fileName.isEmpty());
+    cycleCountLabel->setText(QString("Cycle: %1").arg(VM::cycleCount()));
+    instructionCountLabel->setText(QString("Inst: %1").arg(VM::instructionCount()));
 }
