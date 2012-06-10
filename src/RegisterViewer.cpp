@@ -17,7 +17,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include <QFormLayout>
+#include <QGridLayout>
+#include <QLabel>
 
 #include "Register.h"
 #include "RegisterViewer.h"
@@ -26,14 +27,42 @@
 RegisterViewer::RegisterViewer(QWidget *parent)
     : QWidget(parent)
 {
-    QFormLayout *layout = new QFormLayout(this);
-    for (int i = 0; i < REG_CNT; i++)
+    QFont font("Monospace");
+    font.setStyleHint(QFont::TypeWriter);
+
+    QGridLayout *layout = new QGridLayout(this);
+    layout->setVerticalSpacing(0);
+    layout->setHorizontalSpacing(5);
+
+    for (int i = 0; i < 8; i++)
     {
-        if (i == REG_NONE)
-            continue;
+        QLabel *label = new QLabel(QString("%%1").arg(registerNames[i]), this);
+        label->setFont(font);
+
         registerLabels[i] = new HexWidget(this);
         registerLabels[i]->setBits(8);
-        layout->addRow(QString("%%1: ").arg(registerNames[i]), registerLabels[i]);
+        layout->addWidget(label, i / 4 * 2, i % 4);
+        layout->addWidget(registerLabels[i], i / 4 * 2 + 1, i % 4);
+    }
+
+    {
+        QLabel *label = new QLabel(QString("%%1").arg(registerNames[REG_IDTR]), this);
+        label->setFont(font);
+
+        registerLabels[REG_IDTR] = new HexWidget(this);
+        registerLabels[REG_IDTR]->setBits(8);
+        layout->addWidget(label, 0, 4);
+        layout->addWidget(registerLabels[REG_IDTR], 1, 4);
+    }
+
+    {
+        QLabel *label = new QLabel(QString("%%1").arg(registerNames[REG_EFLAGS]), this);
+        label->setFont(font);
+
+        registerLabels[REG_EFLAGS] = new HexWidget(this);
+        registerLabels[REG_EFLAGS]->setBits(8);
+        layout->addWidget(label, 2, 4);
+        layout->addWidget(registerLabels[REG_EFLAGS], 3, 4);
     }
     setLayout(layout);
 }

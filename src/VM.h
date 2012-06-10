@@ -54,6 +54,7 @@ public:
     static Wire *wireForRead();
     static Wire *wireForWrite();
     static void reserveWire(const QString &wire);
+    static int wireBits(const QString &wire);
 
     static void loadObject(const QString &fileName);
     static void step();
@@ -78,6 +79,8 @@ private:
     bool m_stop, m_halted;
     VMWorker *stageWorkers[WORKERS_COUNT];
     int m_workerAddr[WORKERS_COUNT];
+
+    QScriptEngine *m_engine;
 };
 
 extern const QString stageNames[];

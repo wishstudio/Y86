@@ -84,6 +84,7 @@ function cycle()
             /* divide by zero */
             if (valA == 0)
             {
+                clearAction();
                 addAction("exception");
                 writeWire("e_icode", OP_EXCEP);
                 writeWire("M_icode", OP_EXCEP);

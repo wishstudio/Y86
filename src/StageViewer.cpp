@@ -26,42 +26,38 @@
 StageViewer::StageViewer(int id, QWidget *parent)
     : QWidget(parent)
 {
+    QFont font("Monospace");
+    font.setStyleHint(QFont::TypeWriter);
+
     this->id = id;
     inWires = VM::worker(id)->inWires();
 
-    QGridLayout *wireLayout = new QGridLayout(this);
-    wireLayout->setSpacing(0);
+    QGridLayout *layout = new QGridLayout(this);
+    layout->setVerticalSpacing(0);
+    layout->setHorizontalSpacing(5);
 
     typedef HexWidget *PHexWidget; /* compilation hack */
     wireLabels = new PHexWidget[inWires.size()];
     for (int i = 0; i < inWires.size(); i++)
     {
+        QLabel *label = new QLabel(omitStageName(inWires.at(i)), this);
+        label->setFont(font);
         wireLabels[i] = new HexWidget(this);
-        wireLabels[i]->setBits(8);
-        wireLayout->addWidget(new QLabel(omitStageName(inWires.at(i)), this), 0, i, Qt::AlignLeft);
-        wireLayout->addWidget(wireLabels[i], 1, i, Qt::AlignLeft);
+        wireLabels[i]->setBits(VM::wireBits(omitStageName(inWires.at(i))));
+        layout->addWidget(label, 0, i);
+        layout->addWidget(wireLabels[i], 1, i);
     }
 
-    setLayout(wireLayout);
-//    QGridLayout *layout = new QGridLayout(this);
-//    layout->setSpacing(0);
+    QHBoxLayout *actionsLayout = new QHBoxLayout();
+    for (int i = 0; i < MAX_ACTIONS; i++)
+    {
+        actionLabels[i] = new QLabel(this);
+        actionLabels[i]->setFont(font);
+        actionsLayout->addWidget(actionLabels[i]);
+    }
+    layout->addLayout(actionsLayout, 2, 0, 1, inWires.size());
 
-//    layout->addWidget(new QLabel("Actions", this), 0, 0);
-//    for (int i = 0; i < ROW_COUNT; i++)
-//    {
-//        actionLabels[i] = new QLabel("", this);
-//        layout->addWidget(actionLabels[i], i + 1, 0);
-//    }
-//    layout->addWidget(new QLabel("Wire outputs", this), 0, 1);
-//    typedef QLabel *PQLabel; /* compilation hack */
-//    wireLabels = new PQLabel[inWires.size()];
-//    for (int i = 0; i < inWires.size(); i++)
-//    {
-//        wireLabels[i] = new QLabel("", this);
-//        layout->addWidget(wireLabels[i], i % ROW_COUNT + 1, i / ROW_COUNT + 1);
-//    }
-//
-//    setLayout(layout);
+    setLayout(layout);
 }
 
 StageViewer::~StageViewer()
@@ -71,11 +67,12 @@ StageViewer::~StageViewer()
 
 void StageViewer::updateDisplay()
 {
-    /*QStringList actions = VM::worker(id)->workerActions();
-    for (int i = 0; i < ROW_COUNT; i++)
+    QStringList actions = VM::worker(id)->workerActions();
+    for (int i = 0; i < MAX_ACTIONS; i++)
         actionLabels[i]->setText("");
     for (int i = 0; i < actions.size(); i++)
-        actionLabels[i]->setText(actions.at(i));*/
+        actionLabels[i]->setText(actions.at(i));
+
     for (int i = 0; i < inWires.size(); i++)
         wireLabels[i]->setNumber(VM::wireForRead()->readWire(inWires.at(i)));
 }

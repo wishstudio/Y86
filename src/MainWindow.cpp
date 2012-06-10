@@ -44,27 +44,34 @@ MainWindow::MainWindow(QWidget *parent)
 
     QGridLayout *layout = new QGridLayout(this);
     layout->setSpacing(0);
+    layout->setHorizontalSpacing(5);
     layout->addLayout(toolsLayout, 0, 0);
+
+    QTreeView *memoryViewer = new QTreeView(this);
+    memoryViewer->setModel(VM::codeListModel());
+    memoryViewer->setColumnWidth(0, 100);
+    memoryViewer->setColumnWidth(1, 200);
+    memoryViewer->setColumnWidth(2, 40);
+    layout->addWidget(memoryViewer, 1, 0, 3 + WORKERS_COUNT, 1);
+
+    QTreeView *stackViewer = new QTreeView(this);
+    stackViewer->setModel(VM::stackListModel());
+    stackViewer->setFixedWidth(220);
+    layout->addWidget(stackViewer, 1, 1);
+
+    registerViewer = new RegisterViewer(this);
+    connect(VM::self(), SIGNAL(updateDisplay()), registerViewer, SLOT(updateDisplay()));
+    layout->addWidget(registerViewer, 2, 1, Qt::AlignLeft);
 
     for (int i = 0; i < WORKERS_COUNT; i++)
     {
         stageViewer[i] = new StageViewer(i, this);
         connect(VM::self(), SIGNAL(updateDisplay()), stageViewer[i], SLOT(updateDisplay()));
-        layout->addWidget(stageViewer[i], i + 1, 0);
+        layout->addWidget(stageViewer[i], 3 + i, 1, Qt::AlignLeft);
     }
-    QTreeView *memoryViewer = new QTreeView(this);
-    memoryViewer->setModel(VM::codeListModel());
-    layout->addWidget(memoryViewer, 0, 1, 4, 2);
-
-    QTreeView *stackViewer = new QTreeView(this);
-    stackViewer->setModel(VM::stackListModel());
-    layout->addWidget(stackViewer, 4, 2, 2, 1);
-
-    registerViewer = new RegisterViewer(this);
-    connect(VM::self(), SIGNAL(updateDisplay()), registerViewer, SLOT(updateDisplay()));
-    layout->addWidget(registerViewer, 4, 1, 2, 1);
 
     setLayout(layout);
+    setMinimumSize(1250, 700);
 }
 
 void MainWindow::openFile()

@@ -51,6 +51,13 @@ VM::VM()
         m_workerSemaphore[i] = new QSemaphore();
     m_monitorSemaphore = new QSemaphore();
     m_halted = true;
+
+    QFile file(":/components/Definitions.js");
+    file.open(QIODevice::ReadOnly);
+    QScriptProgram program = QString(file.readAll());
+    file.close();
+    m_engine = new QScriptEngine();
+    m_engine->evaluate(program);
 }
 
 VM::~VM()
@@ -136,6 +143,11 @@ void VM::reserveWire(const QString &wire)
 {
     d()->m_wire->reserve(wire);
     d()->m_nextWire->reserve(wire);
+}
+
+int VM::wireBits(const QString &wire)
+{
+    return d()->m_engine->globalObject().property("getBits").call(QScriptValue(), QScriptValueList() << wire).toInt32();
 }
 
 void VM::loadObject(const QString &fileName)

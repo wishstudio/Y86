@@ -5,5 +5,6 @@
         <file>components/Stage_F.js</file>
         <file>components/Stage_M.js</file>
         <file>components/Stage_W.js</file>
+        <file>components/Definitions.js</file>
     </qresource>
 </RCC>

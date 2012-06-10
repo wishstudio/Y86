@@ -17,35 +17,9 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef STAGEVIEWER_H
-#define STAGEVIEWER_H
-
-#include <QWidget>
-#include <QLabel>
-
-#include "HexWidget.h"
-#include "Wire.h"
-
-#define MAX_ACTIONS     6
-
-class StageViewer: public QWidget
+function getBits(name)
 {
-    Q_OBJECT
-
-public:
-    StageViewer(int id, QWidget *parent = 0);
-    ~StageViewer();
-
-public slots:
-    void updateDisplay();
-
-private:
-    QString omitStageName(const QString &wire);
-    QStringList inWires;
-    int id;
-
-    QLabel *actionLabels[MAX_ACTIONS];
-    HexWidget **wireLabels;
-};
-
-#endif
+    if (name == "icode" || name == "ifun" || name == "Bch" || name == "rA" || name == "rB" || name == "dstE" || name == "dstM")
+        return 1;
+    return 8;
+}

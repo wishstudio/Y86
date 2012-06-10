@@ -65,5 +65,8 @@ function cycle()
 function control()
 {
     if (readWire("W_icode") == OP_HALT)
+    {
+        addAction("halt");
         halt();
+    }
 }

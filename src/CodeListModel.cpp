@@ -17,6 +17,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <QFont>
+
 #include "CodeListModel.h"
 #include "VM.h"
 
@@ -86,13 +88,18 @@ QVariant CodeListModel::data(const QModelIndex &index, int role) const
             else
                 high = m_memoryRef[id + 1];
             QString ret;
+            int cnt = 0;
             for (int i = m_memoryRef[id]; i < high; i++)
             {
                 QString p = QString::number((unsigned char) VM::memory()->readChar(i), 16).toUpper();
                 if (p.size() < 2)
                     p = p.prepend("0");
-                if (!ret.isEmpty())
-                    ret = ret.append(" ");
+                if (cnt)
+                    if (cnt % 8 == 0)
+                        ret = ret.append("\n");
+                    else
+                        ret = ret.append(" ");
+                cnt++;
                 ret = ret.append(p);
             }
             return ret;
@@ -112,6 +119,14 @@ QVariant CodeListModel::data(const QModelIndex &index, int role) const
             return m_code.at(id);
         }
     }
+    else if (role == Qt::FontRole)
+    {
+        QFont font("Monospace");
+        font.setStyleHint(QFont::TypeWriter);
+        return font;
+    }
+    else if (role == Qt::TextAlignmentRole)
+        return Qt::AlignTop;
     return QVariant();
 }
 

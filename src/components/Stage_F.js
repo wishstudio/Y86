@@ -71,11 +71,20 @@ function cycle()
 
     var eip;
     if (readWire("M_icode") == OP_JMP && !readWire("M_Bch"))
+    {
+        addAction("%eip <- M_valP");
         eip = readWire("M_valP");
+    }
     else if (readWire("W_icode") == OP_RET || readWire("W_icode") == OP_INT)
+    {
+        addAction("%eip <- W_valM");
         eip = readWire("W_valM");
+    }
     else
+    {
+        addAction("%eip <- F_predPC");
         eip = readWire("F_predPC");
+    }
     if (!canExecuteMemoryChar(eip))
     {
         exception(EXCEP_MEM);
@@ -89,7 +98,7 @@ function cycle()
     writeWire("D_eip", eip);
     writeWire("D_icode", icode);
     writeWire("D_ifun", ifun);
-    addAction("icode:ifun <- M1[%eip]");
+    addAction("fetch instruction");
 
     switch (icode)
     {
@@ -97,7 +106,6 @@ function cycle()
     case OP_HALT:
     case OP_RET:
     case OP_INT:
-        addAction("valP <- %eip + 1");
         writeWire("D_valP", eip + 1);
         writeWire("F_predPC", eip + 1);
         break;
@@ -106,9 +114,6 @@ function cycle()
     case OP_OPL:
     case OP_PUSHL:
     case OP_POPL:
-        addAction("rA:rB <- M1[%eip + 1]");
-        addAction("valP <- %eip + 2");
-
         if (!canExecuteMemoryChar(eip + 1))
         {
             exception(EXCEP_MEM);
@@ -124,10 +129,6 @@ function cycle()
     case OP_IRMOVL:
     case OP_RMMOVL:
     case OP_MRMOVL:
-        addAction("rA:rB <- M1[%eip + 1]");
-        addAction("valC <- M4[%eip + 2]");
-        addAction("valP <- %eip + 6");
-
         if (!canExecuteMemoryChar(eip + 1) || !canExecuteMemoryInt(eip + 2))
         {
             exception(EXCEP_MEM);
@@ -143,9 +144,6 @@ function cycle()
 
     case OP_JMP:
     case OP_CALL:
-        addAction("valC <- M4[%eip + 1]");
-        addAction("valP <- %eip + 5");
-
         if (!canExecuteMemoryInt(eip + 1))
         {
             exception(EXCEP_MEM);
@@ -163,7 +161,6 @@ function cycle()
             exception(EXCEP_MEM);
             return;
         }
-        addAction("valP <- %eip + 5");
         writeWire("D_valC", readMemoryInt(eip + 1));
         writeWire("D_valP", eip + 5);
         writeWire("F_predPC", eip + 5);

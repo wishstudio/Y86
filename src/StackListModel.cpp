@@ -17,7 +17,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include <QDebug>
+#include <QFont>
 
 #include "Assembler.h"
 #include "Register.h"
@@ -85,6 +85,12 @@ QVariant StackListModel::data(const QModelIndex &index, int role) const
             }
             return ret;
         }
+    }
+    else if (role == Qt::FontRole)
+    {
+        QFont font("Monospace");
+        font.setStyleHint(QFont::TypeWriter);
+        return font;
     }
     return QVariant();
 }
