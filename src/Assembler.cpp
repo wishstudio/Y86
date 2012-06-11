@@ -130,11 +130,15 @@ static void getToken()
         {
             tt = tkNumber;
             getChar();
-            if (!isdigit(ch))
-                error("Number expected after $.");
         }
         else
             tt = tkMemory;
+        bool neg = false;
+        if (ch == '-')
+        {
+            neg = true;
+            getChar();
+        }
         int base = 10;
         if (ch == '0')
         {
@@ -159,8 +163,10 @@ static void getToken()
             getChar();
         }
         if (token.isEmpty())
-            error("Number expected after 0 or 0x tag.");
+            error("Number expected after $, 0 or 0x tag.");
         tn = token.toInt(NULL, base);
+        if (neg)
+            tn = -tn;
     }
     else
         switch (ch)
