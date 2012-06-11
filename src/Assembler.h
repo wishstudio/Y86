@@ -103,7 +103,8 @@ extern QString eflagsNames[];
 class Assembler
 {
 public:
-    static void compileFile(const QString &fileName, Memory *memory);
+    static bool compileFile(const QString &fileName, Memory *memory);
+    static QString errorMessage();
     static int startEIP();
     static int startESP();
     static int startStack();

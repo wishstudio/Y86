@@ -22,6 +22,7 @@
 #include <QFileInfo>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QTreeView>
@@ -126,9 +127,16 @@ void MainWindow::openFile()
     QString fileName = QFileDialog::getOpenFileName(this, "Open assembly...", QString(), "All files (*.*)");
     if (QFile::exists(fileName))
     {
-        fileNameLabel->setText(QFileInfo(fileName).baseName());
         this->fileName = fileName;
-        VM::loadObject(fileName);
+        if (!VM::loadObject(fileName))
+        {
+            QMessageBox::critical(this, "Compile error", Assembler::errorMessage());
+            this->fileName.clear();
+            fileNameLabel->setText(QString());
+            updateDisplay();
+            return;
+        }
+        fileNameLabel->setText(QFileInfo(fileName).baseName());
     }
 }
 

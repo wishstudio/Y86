@@ -61,7 +61,7 @@ public:
     static int wireBits(const QString &wire);
     static QString wireDescription(int icode, const QString &wire, int value);
 
-    static void loadObject(const QString &fileName);
+    static bool loadObject(const QString &fileName);
     static void step();
     static void startVM();
     static void stopVM();
@@ -69,6 +69,7 @@ public:
     static void setFrequency(int freq);
 
     void run();
+    void clearVM();
 
 signals:
     void updateDisplay();

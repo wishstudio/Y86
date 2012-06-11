@@ -51,11 +51,11 @@ static QString lastLine;
 static int line_cnt, tr, tn;
 static QString token;
 static char ch;
+static QString errorMessage;
 
 static void error(QString error_message)
 {
-    qDebug("Compile error at line %d: %s\n", line_cnt + 1, qPrintable(error_message));
-    exit(1);
+    errorMessage = errorMessage.sprintf("Compile error at line %d: %s\n", line_cnt + 1, qPrintable(error_message));
 }
 
 static void getChar()
@@ -163,8 +163,12 @@ static void getToken()
             getChar();
         }
         if (token.isEmpty())
+        {
             error("Number expected after $, 0 or 0x tag.");
-        tn = token.toInt(NULL, base);
+            tn = 0;
+            return;
+        }
+        tn = token.toUpper().toInt(NULL, base);
         if (neg)
             tn = -tn;
     }
@@ -241,7 +245,11 @@ static void parseMemoryRef(int &reg, QString &label, int &imm)
         label = QString();
     }
     else
+    {
         error("Memory reference expected.");
+        imm = 0;
+        label = QString();
+    }
     if (tt == tkLP)
     {
         getToken();
@@ -268,6 +276,8 @@ static void compile()
 {
     for (;;)
     {
+        if (!errorMessage.isEmpty())
+            return;
         int current_addr = memory->addr(), current_line = line_cnt;
         if (tt == tkEOF)
             break;
@@ -416,9 +426,7 @@ static void compile()
                 putAddr(label);
             }
             else if (label == "ret")
-            {
                 memory->putChar(PAIR(OP_RET, 0));
-            }
             else if (label == "pushl")
             {
                 int rA = tr;
@@ -479,10 +487,25 @@ static void compile()
                         }
                     if (fun != -1)
                     {
-                        QString label = token;
-                        expectLabel();
+                        QString label;
+                        int imm = 0;
+                        if (tt == tkLabel)
+                        {
+                            label = token;
+                            getToken();
+                        }
+                        else if (tt == tkMemory)
+                        {
+                            imm = tn;
+                            getToken();
+                        }
+                        else
+                            error("Memory address expected.");
                         memory->putChar(PAIR(OP_JMP, fun));
-                        putAddr(label);
+                        if (label.isEmpty())
+                            memory->put(imm);
+                        else
+                            putAddr(label);
                     }
                     else
                         error("Unrecognized token \"" + token + "\".");
@@ -497,7 +520,7 @@ static void compile()
         memory->patch(patchList[i].second, symbolTable.value(patchList[i].first));
 }
 
-void Assembler::compileFile(const QString &fileName, Memory *memory)
+bool Assembler::compileFile(const QString &fileName, Memory *memory)
 {
     ::memory = memory;
     ::memory->clear();
@@ -514,10 +537,22 @@ void Assembler::compileFile(const QString &fileName, Memory *memory)
     inTextStream.setDevice(&inFile);
     /* default stack size: 0Bytes */
     ::stackSize = 0;
+    ::errorMessage.clear();
     getChar();
     getToken();
     compile();
     inFile.close();
+    if (!::errorMessage.isEmpty())
+    {
+        memory->clear();
+        symbolTable.clear();
+        patchList.clear();
+        ::memoryRef.clear();
+        ::code.clear();
+        lastLine.clear();
+        ::symbolLookupTable.clear();
+        return false;
+    }
     ::code.push_back(lastLine);
     /* allocate stack space */
     ::startStack = memory->addr();
@@ -527,6 +562,12 @@ void Assembler::compileFile(const QString &fileName, Memory *memory)
     ::symbolLookupTable.clear();
     for (QMap<QString, int>::ConstIterator i = symbolTable.constBegin(); i != symbolTable.constEnd(); i++)
         ::symbolLookupTable.insert(i.value(), i.key());
+    return true;
+}
+
+QString Assembler::errorMessage()
+{
+    return ::errorMessage;
 }
 
 int Assembler::startEIP()

@@ -51,6 +51,7 @@ VM::VM()
     connect(this, SIGNAL(updateDisplay()), m_codeListModel, SLOT(updateDisplay()));
     m_stackListModel = new StackListModel();
     connect(this, SIGNAL(updateDisplay()), m_stackListModel, SLOT(updateDisplay()));
+
     m_memory = new Memory();
     m_reg = new Register();
     m_wire = new Wire();
@@ -61,6 +62,7 @@ VM::VM()
     m_halted = true;
     m_cycleCount = 0;
     m_instructionCount = 0;
+    m_symbolLookupTable.clear();
 
     QFile file(":/components/Definitions.js");
     file.open(QIODevice::ReadOnly);
@@ -222,9 +224,13 @@ QString VM::wireDescription(int icode, const QString &wire, int value)
     return QString();
 }
 
-void VM::loadObject(const QString &fileName)
+bool VM::loadObject(const QString &fileName)
 {
-    Assembler::compileFile(fileName, d()->m_memory);
+    if (!Assembler::compileFile(fileName, d()->m_memory))
+    {
+        d()->clearVM();
+        return false;
+    }
 
     /* power up our machine */
     d()->m_wire->clear();
@@ -252,6 +258,7 @@ void VM::loadObject(const QString &fileName)
     d()->m_instructionCount = 0;
     d()->m_symbolLookupTable = Assembler::symbolLookupTable();
     emit d()->updateDisplay();
+    return true;
 }
 
 void VM::step()
@@ -319,4 +326,16 @@ void VM::run()
         for (int i = 0; i < WORKERS_COUNT; i++)
             m_workerSemaphore[i]->release();
     }
+}
+
+void VM::clearVM()
+{
+    m_memory->clear();
+    m_reg->clear();
+    m_wire->clear();
+    m_nextWire->clear();
+    m_halted = true;
+    m_cycleCount = 0;
+    m_instructionCount = 0;
+    m_symbolLookupTable.clear();
 }
