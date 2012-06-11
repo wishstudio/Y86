@@ -23,3 +23,29 @@ function getBits(name)
         return 1;
     return 8;
 }
+
+function getType(icode, name)
+{
+    if (name == "icode")
+        return TYPE_ICODE;
+    else if (name == "ifun")
+    {
+        switch (icode)
+        {
+        case OP_OP:
+            return OP_IFUN_OP;
+
+        case OP_JMP:
+            return OP_IFUN_JMP;
+
+        case OP_INT:
+        case OP_EXCEP:
+            return OP_EXCEPTION;
+        }
+    }
+    else if (name == "rA" || name == "rB" || name == "dstE" || name == "dstM")
+        return TYPE_REGISTER;
+    else if (name == "valP" || name == "predPC")
+        return TYPE_MEMORY;
+    return TYPE_NONE;
+}

@@ -46,6 +46,7 @@ private:
 
     QLabel *actionLabels[MAX_ACTIONS];
     HexWidget **wireLabels;
+    QLabel **descriptionLabels;
 };
 
 #endif

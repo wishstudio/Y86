@@ -36,6 +36,7 @@ QString eflagsNames[] = {"cf", "zf", "sf", "of"};
 
 static enum tokenType {tkEOF, tkComma, tkColon, tkDot, tkRegister, tkMemory, tkNumber, tkLabel, tkLP, tkRP} tt;
 static QMap<QString, int> symbolTable;
+static QMap<int, QString> symbolLookupTable;
 static QVector<QPair<QString, int> > patchList;
 static QFile inFile;
 static QTextStream inTextStream;
@@ -516,6 +517,10 @@ void Assembler::compileFile(const QString &fileName, Memory *memory)
     ::startStack = memory->addr();
     memory->setAttr(true, false);
     memory->setOrigin(memory->addr() + stackSize);
+    /* generate symbolLookupTable */
+    ::symbolLookupTable.clear();
+    for (QMap<QString, int>::ConstIterator i = symbolTable.constBegin(); i != symbolTable.constEnd(); i++)
+        ::symbolLookupTable.insert(i.value(), i.key());
 }
 
 int Assembler::startEIP()
@@ -541,4 +546,9 @@ QVector<int> Assembler::memoryRef()
 QVector<QString> Assembler::code()
 {
     return ::code;
+}
+
+QMap<int, QString> Assembler::symbolLookupTable()
+{
+    return ::symbolLookupTable;
 }

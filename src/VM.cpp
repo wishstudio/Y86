@@ -22,11 +22,19 @@
 #include "Assembler.h"
 #include "VM.h"
 
-#define STAGE_F    0
-#define STAGE_D    1
-#define STAGE_E    2
-#define STAGE_M    3
-#define STAGE_W    4
+#define STAGE_F     0
+#define STAGE_D     1
+#define STAGE_E     2
+#define STAGE_M     3
+#define STAGE_W     4
+
+#define TYPE_NONE       0
+#define TYPE_ICODE      1
+#define TYPE_IFUN_OP    2
+#define TYPE_IFUN_JMP   3
+#define TYPE_REGISTER   4
+#define TYPE_EXCEPTION  5
+#define TYPE_MEMORY     6
 
 const QString stageNames[] = {"F", "D", "E", "M", "W"};
 
@@ -59,6 +67,15 @@ VM::VM()
     QScriptProgram program = QString(file.readAll());
     file.close();
     m_engine = new QScriptEngine();
+    m_engine->globalObject().setProperty("TYPE_NONE", TYPE_NONE);
+    m_engine->globalObject().setProperty("TYPE_ICODE", TYPE_ICODE);
+    m_engine->globalObject().setProperty("TYPE_IFUN_OP", TYPE_IFUN_OP);
+    m_engine->globalObject().setProperty("TYPE_IFUN_JMP", TYPE_IFUN_JMP);
+    m_engine->globalObject().setProperty("TYPE_REGISTER", TYPE_REGISTER);
+    m_engine->globalObject().setProperty("TYPE_EXCEPTION", TYPE_EXCEPTION);
+    m_engine->globalObject().setProperty("TYPE_MEMORY", TYPE_MEMORY);
+    for (int i = 0; i < OP_CNT; i++)
+        m_engine->globalObject().setProperty(("OP_" + opNames[i]).toUpper(), i);
     m_engine->evaluate(program);
 }
 
@@ -167,6 +184,44 @@ int VM::wireBits(const QString &wire)
     return d()->m_engine->globalObject().property("getBits").call(QScriptValue(), QScriptValueList() << wire).toInt32();
 }
 
+QString VM::wireDescription(int icode, const QString &wire, int value)
+{
+    int type = d()->m_engine->globalObject().property("getType").call(QScriptValue(), QScriptValueList() << icode << wire).toInt32();
+    switch (type)
+    {
+    case TYPE_ICODE:
+        if (value >= 0 && value < OP_CNT)
+            return opNames[value];
+        break;
+
+    case TYPE_IFUN_OP:
+        if (value >= 0 && value < FUN_OPL_CNT)
+            return funOplNames[value];
+        break;
+
+    case TYPE_IFUN_JMP:
+        if (value >= 0 && value < FUN_JMP_CNT)
+            return funJmpNames[value];
+        break;
+
+    case TYPE_REGISTER:
+        if (value >= 0 && value < REG_CNT)
+            return registerNames[value];
+        break;
+
+    case TYPE_EXCEPTION:
+        if (value >= 0 && value < EXCEP_CNT)
+            return exceptionNames[value];
+        break;
+
+    case TYPE_MEMORY:
+        if (d()->m_symbolLookupTable.contains(value))
+            return d()->m_symbolLookupTable.value(value);
+        break;
+    }
+    return QString();
+}
+
 void VM::loadObject(const QString &fileName)
 {
     Assembler::compileFile(fileName, d()->m_memory);
@@ -195,6 +250,7 @@ void VM::loadObject(const QString &fileName)
     d()->m_halted = false;
     d()->m_cycleCount = 0;
     d()->m_instructionCount = 0;
+    d()->m_symbolLookupTable = Assembler::symbolLookupTable();
     emit d()->updateDisplay();
 }
 

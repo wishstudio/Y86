@@ -39,14 +39,19 @@ StageViewer::StageViewer(int id, QWidget *parent)
 
     typedef HexWidget *PHexWidget; /* compilation hack */
     wireLabels = new PHexWidget[inWires.size()];
+    typedef QLabel *PQLabel;
+    descriptionLabels = new PQLabel[inWires.size()];
     for (int i = 0; i < inWires.size(); i++)
     {
         QLabel *label = new QLabel(omitStageName(inWires.at(i)), this);
         label->setFont(font);
         wireLabels[i] = new HexWidget(this);
         wireLabels[i]->setBits(VM::wireBits(omitStageName(inWires.at(i))));
+        descriptionLabels[i] = new QLabel(this);
+        descriptionLabels[i]->setFont(font);
         layout->addWidget(label, 0, i, Qt::AlignLeft);
         layout->addWidget(wireLabels[i], 1, i, Qt::AlignLeft);
+        layout->addWidget(descriptionLabels[i], 2, i, Qt::AlignLeft);
         layout->setColumnStretch(i, 0);
     }
     layout->setColumnStretch(inWires.size() - 1, 1);
@@ -58,13 +63,14 @@ StageViewer::StageViewer(int id, QWidget *parent)
         actionLabels[i]->setFont(font);
         actionsLayout->addWidget(actionLabels[i]);
     }
-    layout->addLayout(actionsLayout, 2, 0, 1, inWires.size());
+    layout->addLayout(actionsLayout, 3, 0, 1, inWires.size());
 
     setLayout(layout);
 }
 
 StageViewer::~StageViewer()
 {
+    delete[] descriptionLabels;
     delete[] wireLabels;
 }
 
@@ -76,8 +82,14 @@ void StageViewer::updateDisplay()
     for (int i = 0; i < actions.size(); i++)
         actionLabels[i]->setText(actions.at(i));
 
+    /* fetch stage does not have an icode */
+    int icode = id == 0? 0: VM::wireForRead()->readWire(stageNames[id] + "_icode");
     for (int i = 0; i < inWires.size(); i++)
-        wireLabels[i]->setNumber(VM::wireForRead()->readWire(inWires.at(i)));
+    {
+        int value = VM::wireForRead()->readWire(inWires.at(i));
+        wireLabels[i]->setNumber(value);
+        descriptionLabels[i]->setText(VM::wireDescription(icode, omitStageName(inWires.at(i)), value));
+    }
 }
 
 QString StageViewer::omitStageName(const QString &wire)

@@ -21,6 +21,7 @@
 #define AS_H
 
 #include <QVector>
+#include <QMap>
 
 #include "Memory.h"
 
@@ -108,6 +109,7 @@ public:
     static int startStack();
     static QVector<int> memoryRef();
     static QVector<QString> code();
+    static QMap<int, QString> symbolLookupTable();
 };
 
 #endif

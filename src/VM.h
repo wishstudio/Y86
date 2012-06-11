@@ -22,6 +22,7 @@
 
 #include <QThread>
 #include <QSemaphore>
+#include <QMap>
 
 #include "CodeListModel.h"
 #include "Register.h"
@@ -58,6 +59,7 @@ public:
     static Wire *wireForWrite();
     static void reserveWire(const QString &wire);
     static int wireBits(const QString &wire);
+    static QString wireDescription(int icode, const QString &wire, int value);
 
     static void loadObject(const QString &fileName);
     static void step();
@@ -83,6 +85,7 @@ private:
     VMWorker *stageWorkers[WORKERS_COUNT];
     int m_workerAddr[WORKERS_COUNT];
     int m_frequency, m_cycleCount, m_instructionCount;
+    QMap<int, QString> m_symbolLookupTable;
 
     QScriptEngine *m_engine;
 };
