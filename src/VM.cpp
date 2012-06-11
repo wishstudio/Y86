@@ -229,6 +229,10 @@ bool VM::loadObject(const QString &fileName)
     if (!Assembler::compileFile(fileName, d()->m_memory))
     {
         d()->clearVM();
+        d()->m_codeListModel->setMemory(Assembler::code(), Assembler::memoryRef(), Assembler::startStack());
+        d()->m_stackListModel->setStartStack(Assembler::startStack());
+        d()->m_symbolLookupTable.clear();
+        emit d()->updateDisplay();
         return false;
     }
 
