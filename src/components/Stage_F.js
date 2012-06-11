@@ -31,6 +31,7 @@ function exception(id)
 {
     clearAction();
     addAction("exception");
+    writeWire("F_eip", -1);
     writeWire("D_eip", -1);
     writeWire("D_icode", OP_EXCEP);
     writeWire("D_ifun", id);
